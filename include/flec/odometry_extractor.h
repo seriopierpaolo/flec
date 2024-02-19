@@ -15,7 +15,7 @@ class OdometryExtractor
     
     OdometryExtractor();
 
-    TfBundle transformation;
+    TfBundle tb;
 
     std::tuple <Eigen::Quaterniond, Eigen::Vector3d>
     extractTransformation (nav_msgs::OdometryConstPtr msg);

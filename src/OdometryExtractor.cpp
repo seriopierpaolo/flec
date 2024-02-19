@@ -4,15 +4,18 @@
 #include <eigen3/Eigen/Core>
 #include <eigen3/Eigen/Geometry>
 
+
 #include <flec/odometry_extractor.h>
 #include <flec/datastructure.h>
+
+#include <flec/HandEyeCalibrationSolver.h>
 
 
     OdometryExtractor::OdometryExtractor()  
     {
     };
 
-    TfBundle transformation;
+    TfBundle tb;
     
 
     std::tuple <Eigen::Quaterniond, Eigen::Vector3d>
@@ -40,9 +43,9 @@
         std::tie(qL, transL) = extractTransformation(msg);
         Eigen::Matrix3d rotL = qL.toRotationMatrix();
 
-        this->transformation.header_Left = msg->header;
-        this->transformation.transformation_Left.translation() = transL;
-        this->transformation.transformation_Left.linear()=rotL; 
+        this->tb.header_Left = msg->header;
+        this->tb.transformation_Left.translation() = transL;
+        this->tb.transformation_Left.linear()=rotL; 
 
         //ROS_INFO("Left time is %d", this->transformation.header_Left.stamp.nsec);
         
@@ -55,9 +58,9 @@
         std::tie(qR, transR) = extractTransformation(msg);
         Eigen::Matrix3d rotR = qR.toRotationMatrix();
 
-        this->transformation.header_Right = msg->header;
-        this->transformation.transformation_Right.translation() = transR;
-        this->transformation.transformation_Right.linear()=rotR; 
+        this->tb.header_Right = msg->header;
+        this->tb.transformation_Right.translation() = transR;
+        this->tb.transformation_Right.linear()=rotR; 
 
         //ROS_INFO("Right time is %d", this->transformation.header_Right.stamp.nsec);
 

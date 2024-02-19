@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.0.2)
+cmake_minimum_required(VERSION 3.12)
 project(flec)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
@@ -13,7 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   std_msgs
   nav_msgs
-
+  ceres
 )
 
 
@@ -31,17 +31,20 @@ include_directories(
   include
   ${catkin_INCLUDE_DIRS}
   ${EIGEN3_INCLUDE_DIRS}
+  ${ceres_INCLUDE_DIRS}
   #${Eigen_INCLUDE_DIRS} 
 )
 
-add_executable(odometry_extractor src/odometry_extractor_node.cpp src/OdometryExtractor.cpp)
+add_executable(odometry_extractor src/odometry_extractor_node.cpp src/OdometryExtractor.cpp src/HandEyeCalibrationSolver.cpp)
 
 target_link_libraries(odometry_extractor
   ${catkin_LIBRARIES}
   ${EIGEN3_LIBRARIES}
+  ${ceres_LIBRARIES}
+
 )
 
-add_dependencies(odometry_extractor ${catkin_EXPORTED_TARGETS} ${EIGEN3_LIBRARIES})
+add_dependencies(odometry_extractor ${catkin_EXPORTED_TARGETS} ${EIGEN3_EXPORTED_TARGETS} ${CERES_EXPORTED_TARGETS})
 
 ## Install executables and/or libraries
 
