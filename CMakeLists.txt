@@ -13,15 +13,16 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   std_msgs
   nav_msgs
-  ceres
+  #Ceres
 )
 
-
+find_package(Ceres REQUIRED)
+include_directories(${CERES_INCLUDE_DIRS})
 
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES flec
-  CATKIN_DEPENDS Eigen3 roscpp std_msgs nav_msgs
+  CATKIN_DEPENDS eigen roscpp std_msgs nav_msgs 
   )
 
 
@@ -31,7 +32,7 @@ include_directories(
   include
   ${catkin_INCLUDE_DIRS}
   ${EIGEN3_INCLUDE_DIRS}
-  ${ceres_INCLUDE_DIRS}
+  ${CERES_INCLUDE_DIRS}
   #${Eigen_INCLUDE_DIRS} 
 )
 
@@ -40,7 +41,7 @@ add_executable(odometry_extractor src/odometry_extractor_node.cpp src/OdometryEx
 target_link_libraries(odometry_extractor
   ${catkin_LIBRARIES}
   ${EIGEN3_LIBRARIES}
-  ${ceres_LIBRARIES}
+  ${CERES_LIBRARIES}
 
 )
 

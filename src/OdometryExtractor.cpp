@@ -3,7 +3,7 @@
 #include <nav_msgs/Odometry.h>
 #include <eigen3/Eigen/Core>
 #include <eigen3/Eigen/Geometry>
-
+#include <ceres/ceres.h>
 
 #include <flec/odometry_extractor.h>
 #include <flec/datastructure.h>
