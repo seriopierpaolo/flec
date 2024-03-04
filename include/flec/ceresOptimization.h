@@ -7,6 +7,8 @@
 class ceresOptimization {
 public:
     ceresOptimization(const Eigen::Matrix4d& Tl1, const Eigen::Matrix4d& Tl2);
+    ~ceresOptimization();
+
 
     //setOptMatrixes(const Eigen::Matrix4d& Tl1, const Eigen::Matrix4d& Tl2);
 
@@ -33,8 +35,8 @@ private:
     ceres::Problem problem_;
     const Eigen::Matrix4d Tl1_;
     const Eigen::Matrix4d Tl2_;
-    double q_[4];  // Quaternion parameters
-    double t_[3];  // Translation parameters
+    Eigen::Vector4d q_;  // Quaternion parameters
+    Eigen::Vector3d t_;  // Translation parameters
 
 };
 

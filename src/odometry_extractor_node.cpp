@@ -23,19 +23,6 @@ int main(int argc, char **argv)
 
     OdometryExtractor odometry_extractor;
 
-   
-
-    // Input hand-eye transformations
-    Eigen::Matrix4d Tg1 = odometry_extractor.tb.transformation_Left.matrix();
-    Eigen::Matrix4d Tg2 = odometry_extractor.tb.transformation_Right.matrix();
-    // Initialize Tg1 and Tg2 with your data
-
-    ceresOptimization solver(Tg1, Tg2);
-
-    // Solve the hand-eye calibration problem
-    
-    solver.solve();
-
     // Parameters
     nh.param<std::string>("odometry_topic/left", odometry_topic_left, "/robot/dlo/odom_left");
     nh.param<std::string>("odometry_topic/right", odometry_topic_right, "/robot/dlo/odom_right");
@@ -44,6 +31,17 @@ int main(int argc, char **argv)
     odometry_sub_Left = nh.subscribe(odometry_topic_left, 1, &OdometryExtractor::odometryCallbackLeft,&odometry_extractor);
     odometry_sub_Right = nh.subscribe(odometry_topic_right, 1, &OdometryExtractor::odometryCallbackRight,&odometry_extractor);
 
+    // Input hand-eye transformations
+    Eigen::Matrix4d Tg1 = odometry_extractor.tb.transformation_Left.matrix();
+    Eigen::Matrix4d Tg2 = odometry_extractor.tb.transformation_Right.matrix();
+
+
+    //ceresOptimization solver(Tg1, Tg2);
+    //odometry_extractor.performOptimization();
+    // Solve the hand-eye calibration problem
+
+    //solver.solve();
+    std::cout << "SONO QUI\n";
     //delete &solver;
 
 

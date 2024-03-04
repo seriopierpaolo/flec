@@ -48,6 +48,7 @@
         this->tb.transformation_Left.linear()=rotL; 
 
         //ROS_INFO("Left time is %d", this->transformation.header_Left.stamp.nsec);
+        this->performOptimization();
         
     }
 
@@ -63,8 +64,26 @@
         this->tb.transformation_Right.linear()=rotR; 
 
         //ROS_INFO("Right time is %d", this->transformation.header_Right.stamp.nsec);
-
+        this->performOptimization();
     }
 
 
 
+    void OdometryExtractor::performOptimization() {
+
+
+        Eigen::Matrix4d Tg1 = this->tb.transformation_Left.matrix();
+        Eigen::Matrix4d Tg2 = this->tb.transformation_Right.matrix();
+
+        ceresOptimization solver(Tg1, Tg2);
+
+        // Update the solver with the new transformations
+        //solver.updateTransformations(Tg1, Tg2);
+
+        // Solve the hand-eye calibration problem
+        solver.solve();
+
+        // Optional: Output or use the calibrated transformations
+        //Eigen::Matrix4d calibrated_Tg1 = solver.getTransform1();
+        //Eigen::Matrix4d calibrated_Tg2 = solver.getTransform2();
+    }

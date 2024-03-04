@@ -25,6 +25,9 @@ class OdometryExtractor
     void odometryCallbackRight(const nav_msgs::OdometryConstPtr &msg);
 
 
+    void performOptimization();
+
+
 };
 
 #endif // ODOMETRY_EXTRACTOR_H
