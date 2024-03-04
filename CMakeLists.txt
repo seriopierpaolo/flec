@@ -36,7 +36,7 @@ include_directories(
   #${Eigen_INCLUDE_DIRS} 
 )
 
-add_executable(odometry_extractor src/odometry_extractor_node.cpp src/OdometryExtractor.cpp src/HandEyeCalibrationSolver.cpp)
+add_executable(odometry_extractor src/odometry_extractor_node.cpp src/OdometryExtractor.cpp src/ceresOptimization.cpp)
 
 target_link_libraries(odometry_extractor
   ${catkin_LIBRARIES}

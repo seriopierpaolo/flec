@@ -8,7 +8,7 @@
 #include <flec/odometry_extractor.h>
 #include <flec/datastructure.h>
 
-#include <flec/HandEyeCalibrationSolver.h>
+#include <flec/ceresOptimization.h>
 
 
     OdometryExtractor::OdometryExtractor()  

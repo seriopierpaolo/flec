@@ -7,7 +7,7 @@
 #include <flec/odometry_extractor.h>
 #include <flec/datastructure.h>
 
-#include <flec/HandEyeCalibrationSolver.h>
+#include <flec/ceresOptimization.h>
 
 
 int main(int argc, char **argv)
@@ -23,18 +23,18 @@ int main(int argc, char **argv)
 
     OdometryExtractor odometry_extractor;
 
-    HandEyeCalibrationSolver solver;
+   
 
     // Input hand-eye transformations
     Eigen::Matrix4d Tg1 = odometry_extractor.tb.transformation_Left.matrix();
     Eigen::Matrix4d Tg2 = odometry_extractor.tb.transformation_Right.matrix();
     // Initialize Tg1 and Tg2 with your data
-    
 
-    solver.SetHandEyeTransformations(Tg1, Tg2);
+    ceresOptimization solver(Tg1, Tg2);
 
     // Solve the hand-eye calibration problem
-    solver.Solve();
+    
+    solver.solve();
 
     // Parameters
     nh.param<std::string>("odometry_topic/left", odometry_topic_left, "/robot/dlo/odom_left");
@@ -44,11 +44,10 @@ int main(int argc, char **argv)
     odometry_sub_Left = nh.subscribe(odometry_topic_left, 1, &OdometryExtractor::odometryCallbackLeft,&odometry_extractor);
     odometry_sub_Right = nh.subscribe(odometry_topic_right, 1, &OdometryExtractor::odometryCallbackRight,&odometry_extractor);
 
-
+    //delete &solver;
 
 
     ros::spin();
-    ROS_INFO("HERE");
 
     return 0;
 }
