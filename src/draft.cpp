@@ -1,33 +1,37 @@
 
+/* 
+****************************************************************************************
+Cost Function from formulas 3-4 
+Versatile Multi-LiDAR Accurate Self-Calibration System Based on Pose Graph Optimization
+****************************************************************************************
+*/
 template <typename T>
 bool ceresOptimization::CostFunction::operator()(const T* const q, const T* const t, T* residuals) const 
 {
     Eigen::Map<const Eigen::Quaternion<T>> q_l12(q);
     Eigen::Map<const Eigen::Matrix<T, 3, 1>> t_l12(t);
 
-    //Eigen::Quaternion<T> ql1 (Tl1_.template topLeftCorner<3, 3>());
-    //Eigen::Quaternion<T> ql2 (Tl2_.template topLeftCorner<3, 3>());
-    
     Eigen::Matrix<T, 3, 3> rotation_matrix1 = (Tl1_.template cast<T>()).template topLeftCorner<3, 3>();
     Eigen::Matrix<T, 3, 3> rotation_matrix2 = (Tl2_.template cast<T>()).template topLeftCorner<3, 3>();
 
-    
     Eigen::Quaternion<T> ql1(rotation_matrix1);
     Eigen::Quaternion<T> ql2(rotation_matrix2);
 
+    Eigen::Matrix<T, 3, 1> tl1 = (Tl1_.block<3, 1>(0, 3)).template cast<T>();
+    Eigen::Matrix<T, 3, 1> tl2 = (Tl2_.block<3, 1>(0, 3)).template cast<T>();
 
 
-    Eigen::Matrix<T,3,1> tl1 = (Tl1_.block<3,1>(0,3)).template cast<T>();
-    Eigen::Matrix<T,3,1> tl2 = (Tl2_.block<3,1>(0,3)).template cast<T>();
-
-
-
+    std::cout << "ql1: \n" << ql1.w() << ", " << ql1.x() << ", " << ql1.y() << ", " << ql1.z() << "\n";
+    std::cout << "ql2: \n" << ql2.w() << ", " << ql2.x() << ", " << ql2.y() << ", " << ql2.z() << "\n";
+    std::cout << "ql2: \n" << ql2.w() << ", " << ql2.x() << ", " << ql2.y() << ", " << ql2.z() << "\n";
+    std::cout << "tl1: \n" << tl1 << "\n";
+    std::cout << "tl2: \n" << tl2 << "\n";
 
     /*******************************************************/   
     /*ROTATIONAL RESIDUAL*/
 
     //R_L12*RL1
-    Eigen::Quaternion<T> q_l12_1 = q_l12 * ql1;
+    Eigen::Quaternion<T> q_l12_1 = ql1 * q_l12;
     //R_L12*RL2
     Eigen::Quaternion<T> q_l12_2 = q_l12 * ql2;
 
