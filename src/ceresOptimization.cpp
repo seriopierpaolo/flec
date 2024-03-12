@@ -5,7 +5,16 @@
 #include <flec/ceresOptimization.h>
 #include <flec/datastructure.h>
 
-ceresOptimization::ceresOptimization(const Eigen::Matrix4d& Tl1, const Eigen::Matrix4d& Tl2) : Tl1_(Tl1), Tl2_(Tl2), q_{1.0, 0.0, 0.0, 0.0}, t_{0.0, 0.0, 0.0} {}
+ceresOptimization::ceresOptimization(tfAccumulator* b ) 
+: q_{1.0, 0.0, 0.0, 0.0}, t_{0.0, 0.0, 0.0} 
+{
+    //convert from Affine3D to Matrix4d
+    Eigen::Matrix4d m4dtl1 = b->accumulatedTraj.back().transformation_Left.matrix();
+    Eigen::Matrix4d m4dtl2 = b->accumulatedTraj.back().transformation_Right.matrix();
+    Tl1_ = m4dtl1;
+    Tl2_ = m4dtl2
+
+}
 
 
 //Destructor

@@ -7,7 +7,7 @@
 
 class ceresOptimization {
 public:
-    ceresOptimization(const Eigen::Matrix4d& Tl1, const Eigen::Matrix4d& Tl2);
+    ceresOptimization(tfAccumulator* Buffer);
     ~ceresOptimization();
 
 
@@ -45,6 +45,7 @@ public:
 
 private:
 
+    tfAccumulator buffer_;
     ceres::Problem problem_;
     const Eigen::Matrix4d Tl1_;
     const Eigen::Matrix4d Tl2_;

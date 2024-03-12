@@ -24,20 +24,25 @@ struct TfBundle{
 
 };
 
-/*
+
 class tfAccumulator {
 private:
-    std::vector<TfBundle> accumulatedTraj;
+    
     int nSample;
     tfAccumulator() {this.nSample = 0;}
 
 public:
+    std::vector<TfBundle> accumulatedTraj;
+    
     //Callback
     void addElement(TfBundle newBundle)
     {
         accumulatedTraj.push_back(newBundle);
     }
+
+
+
 }
-*/
+
 
 #endif // DATASTRUCTURE_H
