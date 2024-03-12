@@ -7,7 +7,7 @@
 
 class ceresOptimization {
 public:
-    ceresOptimization();
+    ceresOptimization(const Eigen::Matrix4d& Tl1, const Eigen::Matrix4d& Tl2);
     ~ceresOptimization();
 
 
@@ -15,7 +15,7 @@ public:
 
     struct CostFunction {
 
-        CostFunction();
+        CostFunction(const Eigen::Matrix4d& Tl1, const Eigen::Matrix4d& Tl2);
 
         template <typename T>
         bool operator()(const T* const q, const T* const t, T* residuals) const;

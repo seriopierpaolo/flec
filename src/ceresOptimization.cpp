@@ -5,8 +5,7 @@
 #include <flec/ceresOptimization.h>
 #include <flec/datastructure.h>
 
-//Constructor
-ceresOptimization::ceresOptimization() : q_{1.0, 0.0, 0.0, 0.0}, t_{0.0, 0.0, 0.0} {}
+ceresOptimization::ceresOptimization(const Eigen::Matrix4d& Tl1, const Eigen::Matrix4d& Tl2) : Tl1_(Tl1), Tl2_(Tl2), q_{1.0, 0.0, 0.0, 0.0}, t_{0.0, 0.0, 0.0} {}
 
 
 //Destructor
@@ -14,7 +13,8 @@ ceresOptimization::~ceresOptimization() {
 }
 
 //CostFunction class that implements all the methods needed for a ceres cost function
-ceresOptimization::CostFunction::CostFunction(tfAccumulator)
+ceresOptimization::CostFunction::CostFunction(const Eigen::Matrix4d& Tl1, const Eigen::Matrix4d& Tl2)
+    : Tl1_(Tl1), Tl2_(Tl2)
 {
     
     q1_ = Eigen::Quaternion<double>(Tl1_.block<3, 3>(0,0));
@@ -169,12 +169,11 @@ bool ceresOptimization::CostFunction::operator()(const T* const q, const T* cons
 
     // Add cost function to the problem
     
-    for (int i = 0; i = nSample; i++){
+    
         problem->AddResidualBlock(new ceres::AutoDiffCostFunction<CostFunction, 6, 4, 3>(cost_function),
                                 nullptr, 
                                 q_.data(), 
                                 t_.data());
-    }
 
     problem->SetManifold(q_.data(),quaternion_manifold);
 
