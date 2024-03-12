@@ -16,7 +16,7 @@
     };
 
     TfBundle tb;
-    tfAccumulator tfBuffer;
+    //tfAccumulator tfBuffer;
 
     std::tuple <Eigen::Quaterniond, Eigen::Vector3d>
     OdometryExtractor::extractTransformation (nav_msgs::OdometryConstPtr msg) 
@@ -75,7 +75,7 @@
         Eigen::Matrix4d Tg1 = this->tb.transformation_Left.matrix();
         Eigen::Matrix4d Tg2 = this->tb.transformation_Right.matrix();
 
-        tfBuffer.addElement(tb);
+        //tfBuffer.addElement(tb);
 
         ceresOptimization solver(Tg1, Tg2);
 

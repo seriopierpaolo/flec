@@ -23,7 +23,7 @@ public:
 
     private:
 
-    tfAccumulator* buffer;
+    //tfAccumulator* buffer;
     const Eigen::Matrix4d Tl1_;
     const Eigen::Matrix4d Tl2_;
 

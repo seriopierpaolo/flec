@@ -8,7 +8,7 @@
 #include <eigen3/Eigen/Core>
 #include <eigen3/Eigen/Geometry>
 
-#include <flec/odometry_extractor.h>
+//#include <flec/odometry_extractor.h>
 
 
 
@@ -20,14 +20,15 @@ struct TfBundle{
     std_msgs::Header header_Right;
     Eigen::Affine3d transformation_Right;
 
-    struct TfBundle *prev;
+    
 
 };
 
+/*
 class tfAccumulator {
 private:
     std::vector<TfBundle> accumulatedTraj;
-
+    int nSample;
     tfAccumulator() {this.nSample = 0;}
 
 public:
@@ -36,10 +37,7 @@ public:
     {
         accumulatedTraj.push_back(newBundle);
     }
-
-
-
 }
-
+*/
 
 #endif // DATASTRUCTURE_H
