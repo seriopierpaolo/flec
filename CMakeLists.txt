@@ -13,6 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   std_msgs
   nav_msgs
+  message_filters
   #Ceres
 )
 
@@ -22,7 +23,7 @@ include_directories(${CERES_INCLUDE_DIRS})
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES flec
-  CATKIN_DEPENDS eigen roscpp std_msgs nav_msgs 
+  CATKIN_DEPENDS eigen roscpp std_msgs nav_msgs message_filters
   )
 
 

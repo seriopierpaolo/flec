@@ -21,7 +21,7 @@
     std::tuple <Eigen::Quaterniond, Eigen::Vector3d>
     OdometryExtractor::extractTransformation (nav_msgs::OdometryConstPtr msg) 
     {
-        // Extract rotation and translation components
+        // Extract rotation and translation components from a nav_msgs::Odometry message
         Eigen::Quaterniond rotation(msg->pose.pose.orientation.w,
                                     msg->pose.pose.orientation.x,
                                     msg->pose.pose.orientation.y,
@@ -35,57 +35,42 @@
 
     }
 
-    void OdometryExtractor::odometryCallbackLeft(const nav_msgs::OdometryConstPtr &msg)
+        void OdometryExtractor::odometryCallbackUnique(const nav_msgs::OdometryConstPtr &msg1, const nav_msgs::OdometryConstPtr &msg2)
     {
-        
-        Eigen::Quaterniond qL;
-        Eigen::Vector3d transL; 
-        std::tie(qL, transL) = extractTransformation(msg);
-        Eigen::Matrix3d rotL = qL.toRotationMatrix();
+        //F = First Lidar - S = Second Lidar
 
-        this->tb.header_Left = msg->header;
-        this->tb.transformation_Left.translation() = transL;
-        this->tb.transformation_Left.linear()=rotL; 
+        //First Lidar        
+        Eigen::Quaterniond qF;
+        Eigen::Vector3d transF; 
+        std::tie(qF, transF) = extractTransformation(msg1);
+        Eigen::Matrix3d rotF = qF.toRotationMatrix();
+        this->tb.header_F = msg1->header;
+        this->tb.transformation_F.translation() = transF;
+        this->tb.transformation_F.linear()=rotF; 
+
+        //Second Lidar
+        Eigen::Quaterniond qS;
+        Eigen::Vector3d transS; 
+        std::tie(qS, transS) = extractTransformation(msg2);
+        Eigen::Matrix3d rotS = qS.toRotationMatrix();
+        this->tb.header_S = msg2->header;
+        this->tb.transformation_S.translation() = transS;
+        this->tb.transformation_S.linear()=rotS; 
 
         //ROS_INFO("Left time is %d", this->transformation.header_Left.stamp.nsec);
         this->performOptimization();
         
     }
 
-    void OdometryExtractor::odometryCallbackRight(const nav_msgs::OdometryConstPtr &msg)
-    {
-        Eigen::Quaterniond qR;
-        Eigen::Vector3d transR; 
-        std::tie(qR, transR) = extractTransformation(msg);
-        Eigen::Matrix3d rotR = qR.toRotationMatrix();
-
-        this->tb.header_Right = msg->header;
-        this->tb.transformation_Right.translation() = transR;
-        this->tb.transformation_Right.linear()=rotR; 
-
-        //ROS_INFO("Right time is %d", this->transformation.header_Right.stamp.nsec);
-        this->performOptimization();
-    }
-
-
-
     void OdometryExtractor::performOptimization() {
 
 
-        Eigen::Matrix4d Tg1 = this->tb.transformation_Left.matrix();
-        Eigen::Matrix4d Tg2 = this->tb.transformation_Right.matrix();
 
         tfBuffer.addElement(tb);
+        ceresOptimization solver(tfBuffer);
 
-        ceresOptimization solver(*tfBuffer);
-
-        // Update the solver with the new transformations
-        //solver.updateTransformations(Tg1, Tg2);
 
         // Solve the hand-eye calibration problem
         solver.solve();
 
-        // Optional: Output or use the calibrated transformations
-        //Eigen::Matrix4d calibrated_Tg1 = solver.getTransform1();
-        //Eigen::Matrix4d calibrated_Tg2 = solver.getTransform2();
     }

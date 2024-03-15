@@ -1,4 +1,4 @@
-//Header file that contains all the datastructures for the project
+//Header file that contains all the custom data structures for the project
 
 #ifndef DATASTRUCTURE_H
 #define DATASTRUCTURE_H
@@ -8,17 +8,17 @@
 #include <eigen3/Eigen/Core>
 #include <eigen3/Eigen/Geometry>
 
-//#include <flec/odometry_extractor.h>
+
 
 
 
 struct TfBundle{
 
-    std_msgs::Header header_Left;
-    Eigen::Affine3d transformation_Left;
+    std_msgs::Header header_F;
+    Eigen::Affine3d transformation_F;
 
-    std_msgs::Header header_Right;
-    Eigen::Affine3d transformation_Right;
+    std_msgs::Header header_S;
+    Eigen::Affine3d transformation_S;
 
     
 
@@ -28,11 +28,13 @@ struct TfBundle{
 class tfAccumulator {
 private:
     
-    int nSample;
-    tfAccumulator() {this.nSample = 0;}
+    
 
 public:
     std::vector<TfBundle> accumulatedTraj;
+    int nSample;
+    
+    tfAccumulator() {this->nSample = 0;}
     
     //Callback
     void addElement(TfBundle newBundle)
@@ -40,9 +42,7 @@ public:
         accumulatedTraj.push_back(newBundle);
     }
 
-
-
-}
+};
 
 
 #endif // DATASTRUCTURE_H

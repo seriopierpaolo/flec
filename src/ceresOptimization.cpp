@@ -5,14 +5,15 @@
 #include <flec/ceresOptimization.h>
 #include <flec/datastructure.h>
 
-ceresOptimization::ceresOptimization(tfAccumulator* b ) 
+ceresOptimization::ceresOptimization(tfAccumulator &b ) 
 : q_{1.0, 0.0, 0.0, 0.0}, t_{0.0, 0.0, 0.0} 
 {
     //convert from Affine3D to Matrix4d
-    Eigen::Matrix4d m4dtl1 = b->accumulatedTraj.back().transformation_Left.matrix();
-    Eigen::Matrix4d m4dtl2 = b->accumulatedTraj.back().transformation_Right.matrix();
-    Tl1_ = m4dtl1;
-    Tl2_ = m4dtl2
+    buffer_ = b;
+    
+    Tl1_ = b.accumulatedTraj.back().transformation_F.matrix();
+    Tl2_ = b.accumulatedTraj.back().transformation_S.matrix();
+    
 
 }
 
@@ -22,15 +23,16 @@ ceresOptimization::~ceresOptimization() {
 }
 
 //CostFunction class that implements all the methods needed for a ceres cost function
-ceresOptimization::CostFunction::CostFunction(const Eigen::Matrix4d& Tl1, const Eigen::Matrix4d& Tl2)
-    : Tl1_(Tl1), Tl2_(Tl2)
+ceresOptimization::CostFunction::CostFunction(Eigen::Matrix4d input_t1, Eigen::Matrix4d input_t2)
 {
-    
-    q1_ = Eigen::Quaternion<double>(Tl1_.block<3, 3>(0,0));
-    q2_ = Eigen::Quaternion<double>(Tl2_.block<3, 3>(0,0));
+    Tl1_cf = input_t1;
+    Tl2_cf = input_t2;
 
-    t1_ = Tl1_.block<3, 1>(0, 3);
-    t2_ = Tl2_.block<3, 1>(0, 3);
+    q1_ = Eigen::Quaternion<double>(Tl1_cf.block<3, 3>(0,0));
+    q2_ = Eigen::Quaternion<double>(Tl2_cf.block<3, 3>(0,0));
+
+    t1_ = Tl1_cf.block<3, 1>(0, 3);
+    t2_ = Tl2_cf.block<3, 1>(0, 3);
 }
 
 
@@ -45,35 +47,6 @@ bool ceresOptimization::CostFunction::operator()(const T* const q, const T* cons
 {
     Eigen::Map<const Eigen::Quaternion<T>> q_l12(q);
     Eigen::Map<const Eigen::Matrix<T, 3, 1>> t_l12(t);
-
-
-
-    //Transformation from Lidar1 to Lidar2
-    // Eigen::Matrix4d T12;
-    // T12.block<3,3>(0,0) = q_l12.toRotationMatrix();
-    // T12.block<3,1>(0,3) = t_l12;
-
-    // Eigen::Matrix<T, 4, 4> T12_inverse = (T12.inverse()).template cast<T>();
-
-    // Eigen::Matrix<T, 4, 4> Tl1 = Tl1_.template cast<T>();
-
-    // Eigen::Matrix<T, 4, 4> Tl2 = Tl2_.template cast<T>();
-    // Eigen::Matrix<T, 4, 4> Tl2_inverse = (Tl2.inverse()).template cast<T>();
-
-    // std::cout << "T12: \n" << T12 << "\n";
-    // std::cout << "Tl1: \n" << Tl1 << "\n";
-    // std::cout << "Tl2: \n" << Tl2 << "\n";
-
-
-    /*******************************************************/   
-    /*Product*/
-
-    // Eigen::Matrix<T, 4, 4> product = Tl2_inverse * T12_inverse * Tl1 * T12;
-    // Eigen::Matrix<T, 3, 3> product_3d = product.template block<3,3>(0,0);
-  
-    // Eigen::Matrix<double, 3, 1> ln_res = SO3Log(product_3d.template cast<double>());
-    
-    //aggiungere residui traslazione
 
 
     Eigen::Map<Eigen::Matrix<T, 6, 1>> res(residuals);
@@ -92,7 +65,7 @@ bool ceresOptimization::CostFunction::operator()(const T* const q, const T* cons
     res.template block<3,1>(0,0) = 2.0*rotation_error.vec();
     res.template block<3,1>(3,0) = traslation_error;    
 
-    std::cout<<"Residual "<<residuals<<std::endl;
+    //std::cout<<"Residual "<<residuals<<std::endl;
 
     return true;
 
@@ -170,21 +143,37 @@ bool ceresOptimization::CostFunction::operator()(const T* const q, const T* cons
 
     void ceresOptimization::solve() {
 
+
     std::unique_ptr<ceres::Problem> problem(new ceres::Problem);
-    //ceres::Problem problem;
+
     ceres::Manifold* quaternion_manifold = new ceres::EigenQuaternionManifold;
-    //CostFunction cost_function(Tl1_, Tl2_);
-    auto* cost_function = new CostFunction(Tl1_, Tl2_); // Allocate on the heap
+    
+
+    int i = 0;
+    int sample_size = buffer_.accumulatedTraj.size();
+    Eigen::Matrix4d m1;
+    Eigen::Matrix4d m2;
 
     // Add cost function to the problem
-    
-    
+    std::cout << "The sample size is " << sample_size << std::endl;
+    for (i = 1; i < sample_size; i++) {
+
+        m1 = buffer_.accumulatedTraj[i].transformation_F.matrix();
+        m2 = buffer_.accumulatedTraj[i].transformation_S.matrix();
+
+        auto* cost_function = new CostFunction(m1, m2);
+  
+
+
         problem->AddResidualBlock(new ceres::AutoDiffCostFunction<CostFunction, 6, 4, 3>(cost_function),
                                 nullptr, 
                                 q_.data(), 
                                 t_.data());
+        
+        problem->SetManifold(q_.data(),quaternion_manifold);
+        }
 
-    problem->SetManifold(q_.data(),quaternion_manifold);
+    
 
     // Set Ceres Solver options
     ceres::Solver::Options options;
@@ -199,14 +188,9 @@ bool ceresOptimization::CostFunction::operator()(const T* const q, const T* cons
 
     // Display the results
     std::cout << summary.BriefReport() << "\n";
-    std::cout << "Optimized quaternion: " << q_[0] << ", " << q_[1] << ", " << q_[2] << ", " << q_[3] << "\n";
+    std::cout << "Optimized quaternion: " << q_[0] << ", " << q_[1] << ", "
+                                          << q_[2] << ", " << q_[3] << "\n";
+                                          
     std::cout << "Optimized translation: " << t_[0] << ", " << t_[1] << ", " << t_[2] << "\n";
 
 }
-
-
-
-
-
-
-
