@@ -48,13 +48,30 @@ bool ceresOptimization::CostFunction::operator()(const T* const q, const T* cons
     Eigen::Map<const Eigen::Quaternion<T>> q_l12(q);
     Eigen::Map<const Eigen::Matrix<T, 3, 1>> t_l12(t);
 
-
-    Eigen::Map<Eigen::Matrix<T, 6, 1>> res(residuals);
+    Eigen::Map<Eigen::Matrix<T, 7, 1>> res(residuals);
 
     Eigen::Quaternion<T> q1 = q1_.template cast<T>();
     Eigen::Quaternion<T> q2 = q2_.template cast<T>();
     Eigen::Matrix<T, 3, 1> t1 = t1_.template cast<T>();
     Eigen::Matrix<T, 3, 1> t2 = t2_.template cast<T>();
+
+    //ROTATIONAL PART
+    /****************************************************/
+    Eigen::Matrix<T, 3, 3> r1 = q1.toRotationMatrix();
+    Eigen::Matrix<T, 3, 3> r2 = q2.toRotationMatrix();
+    Eigen::Matrix<T, 3, 3> r12 = q_l12.toRotationMatrix();
+
+    Eigen::Quaternion<T> rot_res (r1*r12 - r12*r2);
+    /****************************************************/
+
+    //TRANSLATIONAL PART
+    /****************************************************/
+    Eigen::Matrix<T, 3, 1> transl_res = r1*t_l12 + t1 - r12*t2 - t_l12;
+
+    /****************************************************/
+
+
+    /*
 
     Eigen::Quaternion<T> rotation_error = q2.conjugate()*q_l12.conjugate()*q1*q2;
 
@@ -63,12 +80,14 @@ bool ceresOptimization::CostFunction::operator()(const T* const q, const T* cons
     Eigen::Matrix<T, 3, 1> traslation_error = p2 - p1;
 
     res.template block<3,1>(0,0) = 2.0*rotation_error.vec();
-    res.template block<3,1>(3,0) = traslation_error;    
+    res.template block<3,1>(3,0) = traslation_error;   
+    */ 
+    res.template block<4,1>(0,0) << rot_res.w(), rot_res.x(), rot_res.y(), rot_res.z();
+    res.template block<3,1>(4,0) = transl_res.template cast<T>();
 
     //std::cout<<"Residual "<<residuals<<std::endl;
 
     return true;
-
 }
 
 
@@ -165,7 +184,7 @@ bool ceresOptimization::CostFunction::operator()(const T* const q, const T* cons
   
 
 
-        problem->AddResidualBlock(new ceres::AutoDiffCostFunction<CostFunction, 6, 4, 3>(cost_function),
+        problem->AddResidualBlock(new ceres::AutoDiffCostFunction<CostFunction, 7, 4, 3>(cost_function),
                                 nullptr, 
                                 q_.data(), 
                                 t_.data());
