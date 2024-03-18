@@ -23,6 +23,8 @@ int main(int argc, char **argv)
     ros::Subscriber odometry_sub_Left;
     ros::Subscriber odometry_sub_Right;
 
+    ros::Publisher optimization;
+
     std::string odometry_topic_left;
     std::string odometry_topic_right;
 

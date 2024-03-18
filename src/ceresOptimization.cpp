@@ -160,9 +160,9 @@ bool ceresOptimization::CostFunction::operator()(const T* const q, const T* cons
 
 
 
-    void ceresOptimization::solve() {
+    Optimization_Result ceresOptimization::solve() {
 
-
+    Optimization_Result result;
     std::unique_ptr<ceres::Problem> problem(new ceres::Problem);
 
     ceres::Manifold* quaternion_manifold = new ceres::EigenQuaternionManifold;
@@ -196,7 +196,7 @@ bool ceresOptimization::CostFunction::operator()(const T* const q, const T* cons
 
     // Set Ceres Solver options
     ceres::Solver::Options options;
-    options.linear_solver_type = ceres::SPARSE_NORMAL_CHOLESKY;
+    options.linear_solver_type = ceres::DENSE_SCHUR;
     options.minimizer_progress_to_stdout = true;
 
     // Solve the problem
@@ -211,5 +211,11 @@ bool ceresOptimization::CostFunction::operator()(const T* const q, const T* cons
                                           << q_[2] << ", " << q_[3] << "\n";
                                           
     std::cout << "Optimized translation: " << t_[0] << ", " << t_[1] << ", " << t_[2] << "\n";
+
+    result.q = q_;
+    result.t = t_;
+
+    return result;
+
 
 }

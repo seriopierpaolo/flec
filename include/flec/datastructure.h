@@ -10,7 +10,11 @@
 
 
 
+struct Optimization_Result{
+    Eigen::Quaterniond q;
+    Eigen::Vector3d t;
 
+};
 
 struct TfBundle{
 

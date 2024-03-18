@@ -64,13 +64,13 @@
 
     void OdometryExtractor::performOptimization() {
 
-
+        
 
         tfBuffer.addElement(tb);
         ceresOptimization solver(tfBuffer);
 
 
         // Solve the hand-eye calibration problem
-        solver.solve();
+        this->optResult = solver.solve();
 
     }

@@ -34,7 +34,7 @@ public:
 
     };
 
-    void solve();
+    Optimization_Result solve();
 
     static Eigen::Matrix<double, 3, 3> SO3Exp(const Eigen::Matrix<double, 3, 1>& input_vector_);
  

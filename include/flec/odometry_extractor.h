@@ -35,6 +35,10 @@ class OdometryExtractor
     //instantiate a ceresOptimization class with all the relevant information
     void performOptimization();
 
+    private:
+
+    Optimization_Result optResult;
+
 
 };
 

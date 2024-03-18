@@ -37,16 +37,16 @@ include_directories(
   #${Eigen_INCLUDE_DIRS} 
 )
 
-add_executable(odometry_extractor src/odometry_extractor_node.cpp src/OdometryExtractor.cpp src/ceresOptimization.cpp)
+add_executable(flec src/flec_node.cpp src/flec.cpp src/ceresOptimization.cpp)
 
-target_link_libraries(odometry_extractor
+target_link_libraries(flec
   ${catkin_LIBRARIES}
   ${EIGEN3_LIBRARIES}
   ${CERES_LIBRARIES}
 
 )
 
-add_dependencies(odometry_extractor ${catkin_EXPORTED_TARGETS} ${EIGEN3_EXPORTED_TARGETS} ${CERES_EXPORTED_TARGETS})
+add_dependencies(flec ${catkin_EXPORTED_TARGETS} ${EIGEN3_EXPORTED_TARGETS} ${CERES_EXPORTED_TARGETS})
 
 ## Install executables and/or libraries
 
