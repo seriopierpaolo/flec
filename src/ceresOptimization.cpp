@@ -215,6 +215,11 @@ bool ceresOptimization::CostFunction::operator()(const T* const q, const T* cons
     result.q = q_;
     result.t = t_;
 
+    
+    //result.pub.publish(result.t,result.q);
+
+    //NON PUBBLICA
+
     return result;
 
 

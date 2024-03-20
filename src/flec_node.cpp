@@ -12,6 +12,7 @@
 #include <flec/datastructure.h>
 
 #include <flec/ceresOptimization.h>
+//#include <flec/pc_PostProcessing.h>
 
 using namespace message_filters;
 
@@ -29,11 +30,17 @@ int main(int argc, char **argv)
     std::string odometry_topic_right;
 
     OdometryExtractor odometry_extractor;
+    Results_Publisher publisher;
+    //Optimal_Transformation_Publisher pub(nh);
+    
+    //PC_PostProcessing post_proc(nh);
 
     // Parameters
     nh.param<std::string>("odometry_topic/left", odometry_topic_left, "/robot/dlo/odom_left");
     nh.param<std::string>("odometry_topic/right", odometry_topic_right, "/robot/dlo/odom_right");
 
+    optimization = nh.advertise<geometry_msgs::TransformStamped>("l2_to_l1_transform", 10);
+    odometry_extractor.publisher.pub_ = optimization;
 
     // Subscriber
     message_filters::Subscriber<nav_msgs::Odometry> odom1_sub(nh, odometry_topic_left, 1);
@@ -44,6 +51,8 @@ int main(int argc, char **argv)
     Synchronizer<MySyncPolicy> sync(MySyncPolicy(10), odom1_sub, odom2_sub);
     sync.registerCallback(boost::bind(&OdometryExtractor::odometryCallbackUnique, &odometry_extractor, _1, _2));
 
+    //pub.publish(odometry_extractor.optResult.t,odometry_extractor.optResult.q);
+    //post_proc.result = odometry_extractor.optResult;
 
 
 

@@ -37,7 +37,9 @@ include_directories(
   #${Eigen_INCLUDE_DIRS} 
 )
 
-add_executable(flec src/flec_node.cpp src/flec.cpp src/ceresOptimization.cpp)
+add_executable(flec src/flec_node.cpp src/flec.cpp 
+                    src/ceresOptimization.cpp 
+                    src/transform_Publisher.cpp)
 
 target_link_libraries(flec
   ${catkin_LIBRARIES}

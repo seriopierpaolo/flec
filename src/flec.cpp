@@ -10,6 +10,26 @@
 
 #include <flec/ceresOptimization.h>
 
+/*
+    void 
+    publish
+    (const Eigen::Vector3d& translation, const Eigen::Quaterniond& rotation, ros::Publisher pub_) 
+    {
+        geometry_msgs::TransformStamped msg;
+        msg.header.stamp = ros::Time::now();
+        msg.header.frame_id = "Lidar1";
+        msg.child_frame_id = "Lidar2";
+        msg.transform.translation.x = translation.x();
+        msg.transform.translation.y = translation.y();
+        msg.transform.translation.z = translation.z();
+        msg.transform.rotation.x = rotation.x();
+        msg.transform.rotation.y = rotation.y();
+        msg.transform.rotation.z = rotation.z();
+        msg.transform.rotation.w = rotation.w();
+        pub_.publish(msg);
+    }
+*/
+
 
     OdometryExtractor::OdometryExtractor()  
     {
@@ -73,4 +93,8 @@
         // Solve the hand-eye calibration problem
         this->optResult = solver.solve();
 
+        publisher.publish(this->optResult.t, this->optResult.q);
+
     }
+
+
