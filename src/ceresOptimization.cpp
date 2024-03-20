@@ -5,6 +5,8 @@
 #include <flec/ceresOptimization.h>
 #include <flec/datastructure.h>
 
+#include <ceres/loss_function.h>
+
 ceresOptimization::ceresOptimization(tfAccumulator &b ) 
 : q_{1.0, 0.0, 0.0, 0.0}, t_{0.0, 0.0, 0.0} 
 {
@@ -173,6 +175,9 @@ bool ceresOptimization::CostFunction::operator()(const T* const q, const T* cons
     Eigen::Matrix4d m1;
     Eigen::Matrix4d m2;
 
+    //ceres::LossFunction* loss_function = new ceres::HuberLoss(1.0);
+    ceres::LossFunction* loss_function = nullptr;
+    
     // Add cost function to the problem
     std::cout << "The sample size is " << sample_size << std::endl;
     for (i = 1; i < sample_size; i++) {
@@ -182,19 +187,23 @@ bool ceresOptimization::CostFunction::operator()(const T* const q, const T* cons
 
         auto* cost_function = new CostFunction(m1, m2);
   
-
+        
 
         problem->AddResidualBlock(new ceres::AutoDiffCostFunction<CostFunction, 7, 4, 3>(cost_function),
-                                nullptr, 
+                                loss_function, 
                                 q_.data(), 
                                 t_.data());
-        
+
+        problem->SetParameterUpperBound(t_.data(), 2, 1);
+
         problem->SetManifold(q_.data(),quaternion_manifold);
         }
 
-    
+
 
     // Set Ceres Solver options
+    
+
     ceres::Solver::Options options;
     options.linear_solver_type = ceres::DENSE_SCHUR;
     options.minimizer_progress_to_stdout = true;
