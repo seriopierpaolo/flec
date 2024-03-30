@@ -14,14 +14,11 @@ bool ceresOptimization::CostFunction::operator()(const T* const q, const T* cons
     Eigen::Map<const Eigen::Quaternion<T>> q_l12(q);
     Eigen::Map<const Eigen::Matrix<T, 3, 1>> t_l12(t);
 
-    Eigen::Matrix<T, 3, 3> rotation_matrix1 = (Tl1_.template cast<T>()).template topLeftCorner<3, 3>();
-    Eigen::Matrix<T, 3, 3> rotation_matrix2 = (Tl2_.template cast<T>()).template topLeftCorner<3, 3>();
+    Eigen::Quaternion<T> ql1 = q1_.template cast<T>();
+    Eigen::Quaternion<T> ql2 = q2_.template cast<T>();
 
-    Eigen::Quaternion<T> ql1(rotation_matrix1);
-    Eigen::Quaternion<T> ql2(rotation_matrix2);
-
-    Eigen::Matrix<T, 3, 1> tl1 = (Tl1_.block<3, 1>(0, 3)).template cast<T>();
-    Eigen::Matrix<T, 3, 1> tl2 = (Tl2_.block<3, 1>(0, 3)).template cast<T>();
+    Eigen::Matrix<T, 3, 1> tl1 = t1_.template cast<T>();
+    Eigen::Matrix<T, 3, 1> tl2 = t2_.template cast<T>();
 
 
     /*******************************************************/   
@@ -74,11 +71,8 @@ bool ceresOptimization::CostFunction::operator()(const T* const q, const T* cons
 
 
 
-
-
 /****************************************************************************************
 Cost Function from formula used in PoseGraph3D problem listed in ceres example
-Versatile Multi-LiDAR Accurate Self-Calibration System Based on Pose Graph Optimization
 ****************************************************************************************/
 
 template <typename T>
@@ -117,6 +111,9 @@ bool ceresOptimization::CostFunction::operator()(const T* const q, const T* cons
 
 
 
+
+
+
 /****************************************************************************************
 Cost Function for hand-eye calibration problem as defined in 
 Solving the Robot-World Hand-Eye(s) Calibration Problem with Iterative Methods
@@ -125,7 +122,6 @@ Solving the Robot-World Hand-Eye(s) Calibration Problem with Iterative Methods
 template <typename T>
 bool ceresOptimization::CostFunction::operator()(const T* const q, const T* const t, T* residuals) const 
 {
-
     Eigen::Map<const Eigen::Quaternion<T>> q_l12(q);
     Eigen::Map<const Eigen::Matrix<T, 3, 1>> t_l12(t);
 
@@ -152,17 +148,6 @@ bool ceresOptimization::CostFunction::operator()(const T* const q, const T* cons
     /****************************************************/
 
 
-    /*
-
-    Eigen::Quaternion<T> rotation_error = q2.conjugate()*q_l12.conjugate()*q1*q2;
-
-    Eigen::Matrix<T,3,1> p1 = (q1 * t_l12) + t1;
-    Eigen::Matrix<T,3,1> p2 = (q_l12 * t2) + t_l12;
-    Eigen::Matrix<T, 3, 1> traslation_error = p2 - p1;
-
-    res.template block<3,1>(0,0) = 2.0*rotation_error.vec();
-    res.template block<3,1>(3,0) = traslation_error;   
-    */ 
     res.template block<4,1>(0,0) << rot_res.w(), rot_res.x(), rot_res.y(), rot_res.z();
     res.template block<3,1>(4,0) = transl_res.template cast<T>();
 
@@ -170,3 +155,4 @@ bool ceresOptimization::CostFunction::operator()(const T* const q, const T* cons
 
     return true;
 }
+

@@ -37,7 +37,8 @@ include_directories(
   #${Eigen_INCLUDE_DIRS} 
 )
 
-add_executable(flec src/flec_node.cpp src/flec.cpp 
+add_executable(flec src/flec_node.cpp 
+                    src/odometry_extractor.cpp 
                     src/ceresOptimization.cpp 
                     src/transform_Publisher.cpp)
 
