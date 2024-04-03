@@ -1,0 +1,50 @@
+
+<launch>
+
+  <arg name="robot_namespace" default="robot"/>
+  <arg name="rviz" default="true"/>
+
+<!-- =============================================================================== -->
+<!--ACKERMANN UNICYCLE-->
+
+  <node name="unicycle" pkg="ackermann_unicycle" type="unicycle" clear_params="true"> 
+  <remap from="unicycle/odom_1" to="/robot/dlo/odom_left"/>
+  <remap from="unicycle/odom_2" to="/robot/dlo/odom_right"/>
+  </node>
+      
+<!-- =============================================================================== -->
+
+
+<!-- =============================================================================== -->
+<!--LEFT ODOMETRY POINTCLOUD-->
+
+  <node name="odometry_pc_left" pkg="trajectory_match" type="odometry_pc" clear_params="true">
+
+    <remap from="/dlo/odom" to="/robot/dlo/odom_left"/>
+    <remap from="/odom_trajectory" to="/odom_trajectory_left"/>
+
+  </node>
+<!-- =============================================================================== -->
+
+
+<!-- =============================================================================== -->
+<!--RIGHT ODOMETRY POINTCLOUD-->
+
+  <node name="odometry_pc_right" pkg="trajectory_match" type="odometry_pc" clear_params="true">
+
+    <remap from="/dlo/odom" to="/robot/dlo/odom_right"/>
+    <remap from="/odom_trajectory" to="/odom_trajectory_right"/>
+
+  </node>
+<!-- =============================================================================== -->
+
+
+
+
+<!-- =============================================================================== -->
+<!--RVIZ CONFIGURATION-->
+  <node pkg="rviz" type="rviz" name="rviz" args="-d $(find trajectory_match)/rviz/tv_test.rviz"/>
+
+<!-- =============================================================================== -->
+
+</launch>
