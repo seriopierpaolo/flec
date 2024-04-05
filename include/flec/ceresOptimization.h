@@ -20,9 +20,11 @@ public:
         Eigen::Matrix4d Tl2_cf;
 
         CostFunction(Eigen::Matrix4d input_t1, Eigen::Matrix4d input_t2);
+        
 
         template <typename T>
         bool operator()(const T* const q, const T* const t, T* residuals) const;
+        
 
 
     private:
@@ -38,7 +40,8 @@ public:
 
     static Eigen::Matrix<double, 3, 3> SO3Exp(const Eigen::Matrix<double, 3, 1>& input_vector_);
  
-    static Eigen::Matrix<double, 3, 1> SO3Log(const Eigen::Matrix<double, 3, 3>& input_matrix_);
+    template <typename T>
+    static Eigen::Matrix<T, 3, 1> SO3Log( Eigen::Matrix<T, 3, 3>& input_matrix_);
 
     static Eigen::Matrix<double, 3, 3> skewSymmetric(const Eigen::Matrix<double, 3, 1>& input_vector_);
 

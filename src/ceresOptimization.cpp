@@ -37,54 +37,65 @@ ceresOptimization::CostFunction::CostFunction(Eigen::Matrix4d input_t1, Eigen::M
     t2_ = Tl2_cf.block<3, 1>(0, 3);
 }
 
-
 //7 RESIDUALS!
-
 /****************************************************************************************
-Cost Function for hand-eye calibration problem as defined in 
-Solving the Robot-World Hand-Eye(s) Calibration Problem with Iterative Methods
+Simple Cost Function for hand-eye calibration problem (AX = XB)
+
 ****************************************************************************************/
 
 template <typename T>
 bool ceresOptimization::CostFunction::operator()(const T* const q, const T* const t, T* residuals) const 
 {
-    Eigen::Map<const Eigen::Quaternion<T>> q_l12(q);
-    Eigen::Map<const Eigen::Matrix<T, 3, 1>> t_l12(t);
+    Eigen::Map<const Eigen::Quaternion<T>> q12_(q);
+    Eigen::Map<const Eigen::Matrix<T, 3, 1>> t12_(t);
 
-    Eigen::Map<Eigen::Matrix<T, 7, 1>> res(residuals);
+    //Eigen::Map<Eigen::Matrix<T, 7, 1>> res(residuals);
 
     Eigen::Quaternion<T> q1 = q1_.template cast<T>();
     Eigen::Quaternion<T> q2 = q2_.template cast<T>();
     Eigen::Matrix<T, 3, 1> t1 = t1_.template cast<T>();
     Eigen::Matrix<T, 3, 1> t2 = t2_.template cast<T>();
 
-    //ROTATIONAL PART
+    //MATRIX DEFINITION
     /****************************************************/
-    Eigen::Matrix<T, 3, 3> r1 = q1.toRotationMatrix();
-    Eigen::Matrix<T, 3, 3> r2 = q2.toRotationMatrix();
-    Eigen::Matrix<T, 3, 3> r12 = q_l12.toRotationMatrix();
+    
+    //Tl12
+    Eigen::Matrix<T, 4, 4> T12;
+    T12.template block<3,3>(0,0) = q12_.toRotationMatrix();
+    T12.template block<3,1>(0,3) = t12_;
+    
+    //T1
+    Eigen::Matrix<T, 4, 4> T1;
+    T1.template block<3,3>(0,0) = q1.toRotationMatrix();
+    T1.template block<3,1>(0,3) = t1;
 
-    Eigen::Quaternion<T> rot_res (r1*r12 - r12*r2);
-    /****************************************************/
+    //std::cout << "T1" << T1 << "\n" <<std::endl;
 
-    //TRANSLATIONAL PART
-    /****************************************************/
-    Eigen::Matrix<T, 3, 1> transl_res = r1*t_l12 + t1 - r12*t2 - t_l12;
+    //T2
+    Eigen::Matrix<T, 4, 4> T2;
+    T2.template block<3,3>(0,0) = q2.toRotationMatrix();
+    T2.template block<3,1>(0,3) = t2;
 
-    /****************************************************/
-    //Eigen::Matrix3d m = rot_res.toRotationMatrix();
-    //Eigen::Matrix<T, 3, 1> rot_eul_res = m.eulerAngles(0,1,2).template cast<T>();
+    //std::cout << "T2" << T12 << "\n" << std::endl;
 
-    //res.template block<3,1>(0,0) << rot_eul_res[0], rot_eul_res[1], rot_eul_res[2];
+    //RESIDUAL MATRIX
+    Eigen::Matrix<T, 4, 4> res_mat = (T1 * T12) - (T12 * T2);
 
-    //HO TOLTO UN PEZZO DI QUATERNIONE
-    res.template block<3,1>(0,0) <<  rot_res.x(), rot_res.y(), rot_res.z();
-    res.template block<3,1>(3,0) = transl_res.template cast<T>();
+    Eigen::Quaternion<T> res_quat(res_mat.template block<3,3>(0,0));
+    Eigen::Matrix<T, 3, 1> res_transl = res_mat.template block<3,1>(0,3);
 
-    //std::cout<<"Residual "<<residuals<<std::endl;
+
+    Eigen::Map<Eigen::Matrix<T, 4, 1>> residuals_rotation(residuals);
+    Eigen::Map<Eigen::Matrix<T, 3, 1>> residuals_translation(residuals + 4);
+    
+
+    residuals_translation = res_transl;
+    residuals_rotation  <<  res_quat.w(), res_quat.x(), res_quat.y(), res_quat.z();
+   
 
     return true;
 }
+
 
 
 
@@ -125,16 +136,21 @@ bool ceresOptimization::CostFunction::operator()(const T* const q, const T* cons
     * @return
     * Result of the operation.
     */
-    Eigen::Matrix<double, 3, 1> ceresOptimization::SO3Log(const Eigen::Matrix<double, 3, 3>& input_matrix_)
+    template <typename T>
+    Eigen::Matrix<T, 3, 1> ceresOptimization::SO3Log(Eigen::Matrix<T, 3, 3>& input_matrix_)
     {
-        double input_matrix_trace = input_matrix_.trace();
+        Eigen::Matrix3d in_mat = input_matrix_.template cast<T>();
+        double input_matrix_trace = in_mat.trace();
+        
         double scalar_constant = (input_matrix_trace > 3.0 - EPSILON) ? 0.0 : acos(0.5*(input_matrix_trace - 1.0));
  
-        Eigen::Matrix<double, 3, 1> output_vector(input_matrix_(2, 1) - input_matrix_(1, 2),
+        Eigen::Matrix<T, 3, 1> output_vector(input_matrix_(2, 1) - input_matrix_(1, 2),
                                                   input_matrix_(0, 2) - input_matrix_(2, 0),
                                                   input_matrix_(1, 0) - input_matrix_(0, 1));
  
-        return (fabs(scalar_constant) < EPSILON) ? (0.5*output_vector) : ((0.5*scalar_constant/sin(scalar_constant))*output_vector);
+        Eigen::Matrix<T, 3, 1> output = (fabs(scalar_constant) < EPSILON) ? (0.5*output_vector) : ((0.5*scalar_constant/sin(scalar_constant))*output_vector);
+
+         return output.template cast<T>();
     }
 
     /**
@@ -185,7 +201,7 @@ bool ceresOptimization::CostFunction::operator()(const T* const q, const T* cons
   
         
 
-        problem->AddResidualBlock(new ceres::AutoDiffCostFunction<CostFunction, 6, 4, 3>(cost_function),
+        problem->AddResidualBlock(new ceres::AutoDiffCostFunction<CostFunction, 7, 4, 3>(cost_function),
                                 loss_function, 
                                 q_.data(), 
                                 t_.data());

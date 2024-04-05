@@ -114,9 +114,13 @@ bool ceresOptimization::CostFunction::operator()(const T* const q, const T* cons
 
 
 
+
+
+//3 RESIDUALS!
 /****************************************************************************************
 Cost Function for hand-eye calibration problem as defined in 
-Solving the Robot-World Hand-Eye(s) Calibration Problem with Iterative Methods
+Versatile Multi-Lidar Calibration - Second Formula
+TBM SO3Log 
 ****************************************************************************************/
 
 template <typename T>
@@ -125,34 +129,101 @@ bool ceresOptimization::CostFunction::operator()(const T* const q, const T* cons
     Eigen::Map<const Eigen::Quaternion<T>> q_l12(q);
     Eigen::Map<const Eigen::Matrix<T, 3, 1>> t_l12(t);
 
-    Eigen::Map<Eigen::Matrix<T, 7, 1>> res(residuals);
+    Eigen::Map<Eigen::Matrix<T, 3, 1>> res(residuals);
 
     Eigen::Quaternion<T> q1 = q1_.template cast<T>();
     Eigen::Quaternion<T> q2 = q2_.template cast<T>();
     Eigen::Matrix<T, 3, 1> t1 = t1_.template cast<T>();
     Eigen::Matrix<T, 3, 1> t2 = t2_.template cast<T>();
 
-    //ROTATIONAL PART
+    //MATRIX DEFINITION
     /****************************************************/
-    Eigen::Matrix<T, 3, 3> r1 = q1.toRotationMatrix();
-    Eigen::Matrix<T, 3, 3> r2 = q2.toRotationMatrix();
-    Eigen::Matrix<T, 3, 3> r12 = q_l12.toRotationMatrix();
+    
+    //Tl12
+    Eigen::Matrix<T, 4, 4> T12 = Eigen::Matrix4f::Identity();
+    T12.template block<3,3>(0,0) = q_l12.toRotationMatrix();
+    T12.template block<3,1>(0,3) = t_l12;
 
-    Eigen::Quaternion<T> rot_res (r1*r12 - r12*r2);
-    /****************************************************/
+    //T1
+    Eigen::Matrix<T, 4, 4> T1 = Eigen::Matrix4f::Identity();
+    T1.template block<3,3>(0,0) = q1.toRotationMatrix();
+    T1.template block<3,1>(0,3) = t1;
 
-    //TRANSLATIONAL PART
-    /****************************************************/
-    Eigen::Matrix<T, 3, 1> transl_res = r1*t_l12 + t1 - r12*t2 - t_l12;
+    //T2
+    Eigen::Matrix<T, 4, 4> T2 = Eigen::Matrix4f::Identity();
+    T2.template block<3,3>(0,0) = q2.toRotationMatrix();
+    T2.template block<3,1>(0,3) = t2;
 
-    /****************************************************/
+    //RESIDUAL MATRIX
+    Eigen::Matrix<T, 4, 4> res_mat = T2.inverse() * T12.inverse() * T1 * T12;
 
-
-    res.template block<4,1>(0,0) << rot_res.w(), rot_res.x(), rot_res.y(), rot_res.z();
-    res.template block<3,1>(4,0) = transl_res.template cast<T>();
+    Eigen::Matrix<T, 3, 3> res_mat3 = res_mat.template block<3,3>(0,0);
+    Eigen::Matrix<T, 3, 1> res_vec = SO3Log(res_mat3);
+    
+    //HO TOLTO UN PEZZO DI QUATERNIONE
+    res = res_vec;
+    //res.template block<3,1>(0,0) <<  rot_res.x(), rot_res.y(), rot_res.z();
+    //res.template block<3,1>(3,0) = transl_res.template cast<T>();
 
     //std::cout<<"Residual "<<residuals<<std::endl;
 
     return true;
 }
 
+
+
+
+//7 RESIDUALS!
+/****************************************************************************************
+Simple Cost Function for hand-eye calibration problem (AX = XB)
+
+****************************************************************************************/
+
+template <typename T>
+bool ceresOptimization::CostFunction::operator()(const T* const q, const T* const t, T* residuals) const 
+{
+    Eigen::Map<const Eigen::Quaternion<T>> q12_(q);
+    Eigen::Map<const Eigen::Matrix<T, 3, 1>> t12_(t);
+
+    //Eigen::Map<Eigen::Matrix<T, 7, 1>> res(residuals);
+
+    Eigen::Quaternion<T> q1 = q1_.template cast<T>();
+    Eigen::Quaternion<T> q2 = q2_.template cast<T>();
+    Eigen::Matrix<T, 3, 1> t1 = t1_.template cast<T>();
+    Eigen::Matrix<T, 3, 1> t2 = t2_.template cast<T>();
+
+    //MATRIX DEFINITION
+    /****************************************************/
+    
+    //Tl12
+    Eigen::Matrix<T, 4, 4> T12;
+    T12.template block<3,3>(0,0) = q12_.toRotationMatrix();
+    T12.template block<3,1>(0,3) = t12_;
+    
+    //T1
+    Eigen::Matrix<T, 4, 4> T1;
+    T1.template block<3,3>(0,0) = q1.toRotationMatrix();
+    T1.template block<3,1>(0,3) = t1;
+
+    //T2
+    Eigen::Matrix<T, 4, 4> T2;
+    T2.template block<3,3>(0,0) = q2.toRotationMatrix();
+    T2.template block<3,1>(0,3) = t2;
+
+    //RESIDUAL MATRIX
+    Eigen::Matrix<T, 4, 4> res_mat = (T1 * T12) + (T12 * T2);
+
+    Eigen::Quaternion<T> res_quat(res_mat.template block<3,3>(0,0));
+    Eigen::Matrix<T, 3, 1> res_transl = res_mat.template block<3,1>(0,3);
+
+
+    Eigen::Map<Eigen::Matrix<T, 4, 1>> residuals_rotation(residuals);
+    Eigen::Map<Eigen::Matrix<T, 3, 1>> residuals_translation(residuals + 4);
+    
+
+    residuals_translation = res_transl;
+    residuals_rotation  <<  res_quat.w(), res_quat.x(), res_quat.y(), res_quat.z();
+   
+
+    return true;
+}
