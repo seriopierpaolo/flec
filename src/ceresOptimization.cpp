@@ -52,7 +52,7 @@ bool ceresOptimization::CostFunction::operator()(const T* const q, const T* cons
     Eigen::Map<const Eigen::Quaternion<T>> q12_(q);
     Eigen::Map<const Eigen::Matrix<T, 3, 1>> t12_(t);
 
-    Eigen::Map<Eigen::Matrix<T, 6, 1>> res(residuals);
+    Eigen::Map<Eigen::Matrix<T, 6, 1>> res(residuals_ptr);
 
     Eigen::Quaternion<T> q1 = q1_.template cast<T>();
     Eigen::Matrix<T, 3, 1> t1 = t1_.template cast<T>();
@@ -60,73 +60,15 @@ bool ceresOptimization::CostFunction::operator()(const T* const q, const T* cons
     Eigen::Quaternion<T> q2 = q2_.template cast<T>();
     Eigen::Matrix<T, 3, 1> t2 = t2_.template cast<T>();
 
-<<<<<<< HEAD
-
-    //MATRIX DEFINITION
-    /****************************************************/
-    
-    //Tl12
-    Eigen::Matrix<T, 4, 4> T12;
-    T12.template block<3,3>(0,0) = q12_.toRotationMatrix();
-    T12.template block<3,1>(0,3) = t12_;
-    
-    //T1
-    Eigen::Matrix<T, 4, 4> T1;
-    T1.template block<3,3>(0,0) = q1.toRotationMatrix();
-    T1.template block<3,1>(0,3) = t1;
-
-    
-
-    //T2
-    Eigen::Matrix<T, 4, 4> T2;
-    T2.template block<3,3>(0,0) = q2.toRotationMatrix();
-    T2.template block<3,1>(0,3) = t2;
-
-
-    //RESIDUAL MATRIX
-    //Eigen::Matrix<T, 4, 4> res_mat = (T1 * T12) - (T12 * T2);
-    Eigen::Matrix<T, 4, 4> res_mat = (T2.conjugate() * T12.conjugate() * T1 * T12);
-
-=======
     // From Versatile Multi-LiDAR Accurate Self-Calibration System Based on Pose Graph Optimization
     // By Inversion of Equations (3) and (4) 
     Eigen::Quaternion<T> res_quat = (q12_*q2).inverse()*q1*q12_;
     Eigen::Matrix<T, 3, 1> res_transl = (q1*t12_ + t1) - (q12_*t2 + t12_);
->>>>>>> d2e59a7a2e099af2876b5e2ed0a66ed910b9657f
 
     Eigen::Map<Eigen::Matrix<T, 6, 1>> residuals(residuals_ptr);
 
-<<<<<<< HEAD
-    //std::cout << "res_quat " << res_quat << "\n" << std::endl;
-
-    //std::cout << "res_transl " << res_transl << "\n" << std::endl;
-
-/*
-    Eigen::Map<Eigen::Matrix<T, 4, 1>> residuals_rotation(residuals);
-    Eigen::Map<Eigen::Matrix<T, 3, 1>> residuals_translation(residuals + 4);
-    
-
-    residuals_rotation  <<  res_quat.w(), res_quat.x(), res_quat.y(), res_quat.z();
-    residuals_translation = res_transl;
-*/
-
-    res.template block<3,1>(0,0) = res_transl;
-    res.template block<3,1>(3,0) = 2.0*res_quat.vec();    
-
-    //residuals_translation = abs(res_transl[0]) + abs(res_transl[1]) + abs(res_transl[2]);
-
-    //*********************************************************************
-    //Debug Zone
-    std::cout << "t1" << t1_ << "\n" <<std::endl;
-    std::cout << "q1"<< q1_ << "\n" << std::endl;
-    //std::cout << "T12" << T12.inverse() << "\n" << std::endl;
-    //std::cout << "resmat " << res_mat << "\n" << std::endl;
-    //std::cout << "res_transl" << res_transl << "\n" << std::endl;
-    //*********************************************************************
-=======
-    residuals.template block<3, 1>(0, 0) = res_transl;
-    residuals.template block<3, 1>(3, 0) = T(2.0) * res_quat.vec();
->>>>>>> d2e59a7a2e099af2876b5e2ed0a66ed910b9657f
+    res.template block<3, 1>(0, 0) = res_transl;
+    res.template block<3, 1>(3, 0) = T(2.0) * res_quat.vec();
 
     return true;
 }
@@ -236,11 +178,8 @@ bool ceresOptimization::CostFunction::operator()(const T* const q, const T* cons
         m2 = buffer_.accumulatedTraj[i].transformation_S.matrix();
 
 
-<<<<<<< HEAD
-        problem->AddResidualBlock(new ceres::AutoDiffCostFunction<CostFunction, 6, 4, 3>(cost_function),
-=======
-        problem->AddResidualBlock(new ceres::AutoDiffCostFunction<CostFunction, 6, 4, 3>(m1, m2),
->>>>>>> d2e59a7a2e099af2876b5e2ed0a66ed910b9657f
+        problem->AddResidualBlock(new ceres::AutoDiffCostFunction<CostFunction, 6, 4, 3>
+                                                        (new::ceresOptimization::CostFunction(m1,m2)),
                                 loss_function, 
                                 q_.coeffs().data(), 
                                 t_.data());
