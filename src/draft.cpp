@@ -11,38 +11,41 @@ Versatile Multi-LiDAR Accurate Self-Calibration System Based on Pose Graph Optim
 template <typename T>
 bool ceresOptimization::CostFunction::operator()(const T* const q, const T* const t, T* residuals) const 
 {
-    Eigen::Map<const Eigen::Quaternion<T>> q_l12(q);
-    Eigen::Map<const Eigen::Matrix<T, 3, 1>> t_l12(t);
+    Eigen::Map<const Eigen::Quaternion<T>> q12(q);
+    Eigen::Map<const Eigen::Matrix<T, 3, 1>> t12(t);
 
-    Eigen::Quaternion<T> ql1 = q1_.template cast<T>();
-    Eigen::Quaternion<T> ql2 = q2_.template cast<T>();
+    Eigen::Quaternion<T> q1 = q1_.template cast<T>();
+    Eigen::Quaternion<T> q2 = q2_.template cast<T>();
 
-    Eigen::Matrix<T, 3, 1> tl1 = t1_.template cast<T>();
-    Eigen::Matrix<T, 3, 1> tl2 = t2_.template cast<T>();
+    Eigen::Matrix<T, 3, 1> t1 = t1_.template cast<T>();
+    Eigen::Matrix<T, 3, 1> t2 = t2_.template cast<T>();
 
 
     /*******************************************************/   
     /*ROTATIONAL RESIDUAL*/
 
     //R_L12*RL1
-    Eigen::Quaternion<T> q_l12_1 = ql1 * q_l12;
+    Eigen::Quaternion<T> q12_1 = q1 * q12;
     //R_L12*RL2
-    Eigen::Quaternion<T> q_l12_2 = q_l12 * ql2;
+    Eigen::Quaternion<T> q12_2 = q12 * q2;
 
 
-    Eigen::Quaternion<T> q_l12_1_inverse = q_l12_1.conjugate();
+    Eigen::Quaternion<T> q12_1_inverse = q12_1.conjugate();
     //Residual for Rotational Part
-    Eigen::Quaternion<T> q_l12_estimated = q_l12_1_inverse * q_l12_2;
+    //Eigen::Quaternion<T> res_q = q12_1_inverse * q12_2;
+    //Eigen::Quaternion<T> res_q = q12_1_inverse * q12_2;
+    Eigen::Quaternion<T> res_q ( q12_1.toRotationMatrix() - q12_2.toRotationMatrix() );
+
 
     
 
     /*******************************************************/
     /*TRANSLATIONAL RESIDUAL*/
-    Eigen::Matrix<T,3,1> p1 = (ql1.toRotationMatrix() * t_l12) + tl1;
-    Eigen::Matrix<T,3,1> p2 = (q_l12.toRotationMatrix() * tl2) + t_l12;
+    Eigen::Matrix<T,3,1> p1 = (q1.toRotationMatrix() * t12) + t1;
+    Eigen::Matrix<T,3,1> p2 = (q12.toRotationMatrix() * t2) + t12;
 
 
-    Eigen::Matrix<T,3,1> t_l12_estimated = p2 - p1;
+    //Eigen::Matrix<T,3,1> res_t12 = p2 - p1;
 
     /*******************************************************/
     /*RESIDUAL VECTOR*/
@@ -53,17 +56,18 @@ bool ceresOptimization::CostFunction::operator()(const T* const q, const T* cons
     residuals_translation = p2 - p1;
 
     // Convert quaternion to Eigen vector before assigning
-    Eigen::Quaternion<T> q_l12_estimated_cast = q_l12_estimated.template cast<T>();
-    residuals_rotation << q_l12_estimated_cast.x(), q_l12_estimated_cast.y(), q_l12_estimated_cast.z(), q_l12_estimated_cast.w();
+    Eigen::Quaternion<T> res_q_cast = res_q.template cast<T>();
+    residuals_rotation << res_q_cast.x(), res_q_cast.y(), res_q_cast.z(), res_q_cast.w();
 
     /*******************************************************/
 
-    std::cout<<"Residual Translation\n"<<residuals_translation<<std::endl;
+    //std::cout<<"Residual Rotation\n"<<residuals_rotation<<std::endl;
     
     std::cout<<"Residual "<<residuals<<std::endl;
     return true;
 
 }
+
 
 
 
@@ -172,7 +176,6 @@ bool ceresOptimization::CostFunction::operator()(const T* const q, const T* cons
 
 
 
-
 //7 RESIDUALS!
 /****************************************************************************************
 Simple Cost Function for hand-eye calibration problem (AX = XB)
@@ -188,8 +191,9 @@ bool ceresOptimization::CostFunction::operator()(const T* const q, const T* cons
     //Eigen::Map<Eigen::Matrix<T, 7, 1>> res(residuals);
 
     Eigen::Quaternion<T> q1 = q1_.template cast<T>();
-    Eigen::Quaternion<T> q2 = q2_.template cast<T>();
     Eigen::Matrix<T, 3, 1> t1 = t1_.template cast<T>();
+    
+    Eigen::Quaternion<T> q2 = q2_.template cast<T>();
     Eigen::Matrix<T, 3, 1> t2 = t2_.template cast<T>();
 
     //MATRIX DEFINITION
@@ -205,13 +209,17 @@ bool ceresOptimization::CostFunction::operator()(const T* const q, const T* cons
     T1.template block<3,3>(0,0) = q1.toRotationMatrix();
     T1.template block<3,1>(0,3) = t1;
 
+    
+
     //T2
     Eigen::Matrix<T, 4, 4> T2;
     T2.template block<3,3>(0,0) = q2.toRotationMatrix();
     T2.template block<3,1>(0,3) = t2;
 
+
     //RESIDUAL MATRIX
-    Eigen::Matrix<T, 4, 4> res_mat = (T1 * T12) + (T12 * T2);
+    Eigen::Matrix<T, 4, 4> res_mat = (T1 * T12) - (T12 * T2);
+
 
     Eigen::Quaternion<T> res_quat(res_mat.template block<3,3>(0,0));
     Eigen::Matrix<T, 3, 1> res_transl = res_mat.template block<3,1>(0,3);
@@ -221,9 +229,18 @@ bool ceresOptimization::CostFunction::operator()(const T* const q, const T* cons
     Eigen::Map<Eigen::Matrix<T, 3, 1>> residuals_translation(residuals + 4);
     
 
-    residuals_translation = res_transl;
     residuals_rotation  <<  res_quat.w(), res_quat.x(), res_quat.y(), res_quat.z();
-   
+    residuals_translation = res_transl;
+    //residuals_translation = abs(res_transl[0]) + abs(res_transl[1]) + abs(res_transl[2]);
+
+    //*********************************************************************
+    //Debug Zone
+    //std::cout << "T1" << T1 << "\n" <<std::endl;
+    //std::cout << "T2" << T2 << "\n" << std::endl;
+    //std::cout << "T12" << T12 << "\n" << std::endl;
+    std::cout << "ResMat" << res_mat << "\n" << std::endl;
+    //std::cout << "res_transl" << res_transl << "\n" << std::endl;
+    //*********************************************************************
 
     return true;
 }

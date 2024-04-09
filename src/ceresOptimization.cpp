@@ -30,12 +30,15 @@ ceresOptimization::CostFunction::CostFunction(Eigen::Matrix4d input_t1, Eigen::M
     Tl1_cf = input_t1;
     Tl2_cf = input_t2;
 
+
+
     q1_ = Eigen::Quaternion<double>(Tl1_cf.block<3, 3>(0,0));
     q2_ = Eigen::Quaternion<double>(Tl2_cf.block<3, 3>(0,0));
 
     t1_ = Tl1_cf.block<3, 1>(0, 3);
     t2_ = Tl2_cf.block<3, 1>(0, 3);
 }
+
 
 //7 RESIDUALS!
 /****************************************************************************************
@@ -49,12 +52,14 @@ bool ceresOptimization::CostFunction::operator()(const T* const q, const T* cons
     Eigen::Map<const Eigen::Quaternion<T>> q12_(q);
     Eigen::Map<const Eigen::Matrix<T, 3, 1>> t12_(t);
 
-    //Eigen::Map<Eigen::Matrix<T, 7, 1>> res(residuals);
+    Eigen::Map<Eigen::Matrix<T, 6, 1>> res(residuals);
 
     Eigen::Quaternion<T> q1 = q1_.template cast<T>();
-    Eigen::Quaternion<T> q2 = q2_.template cast<T>();
     Eigen::Matrix<T, 3, 1> t1 = t1_.template cast<T>();
+    
+    Eigen::Quaternion<T> q2 = q2_.template cast<T>();
     Eigen::Matrix<T, 3, 1> t2 = t2_.template cast<T>();
+
 
     //MATRIX DEFINITION
     /****************************************************/
@@ -69,33 +74,51 @@ bool ceresOptimization::CostFunction::operator()(const T* const q, const T* cons
     T1.template block<3,3>(0,0) = q1.toRotationMatrix();
     T1.template block<3,1>(0,3) = t1;
 
-    //std::cout << "T1" << T1 << "\n" <<std::endl;
+    
 
     //T2
     Eigen::Matrix<T, 4, 4> T2;
     T2.template block<3,3>(0,0) = q2.toRotationMatrix();
     T2.template block<3,1>(0,3) = t2;
 
-    //std::cout << "T2" << T12 << "\n" << std::endl;
 
     //RESIDUAL MATRIX
-    Eigen::Matrix<T, 4, 4> res_mat = (T1 * T12) - (T12 * T2);
+    //Eigen::Matrix<T, 4, 4> res_mat = (T1 * T12) - (T12 * T2);
+    Eigen::Matrix<T, 4, 4> res_mat = (T2.conjugate() * T12.conjugate() * T1 * T12);
+
 
     Eigen::Quaternion<T> res_quat(res_mat.template block<3,3>(0,0));
     Eigen::Matrix<T, 3, 1> res_transl = res_mat.template block<3,1>(0,3);
 
+    //std::cout << "res_quat " << res_quat << "\n" << std::endl;
 
+    //std::cout << "res_transl " << res_transl << "\n" << std::endl;
+
+/*
     Eigen::Map<Eigen::Matrix<T, 4, 1>> residuals_rotation(residuals);
     Eigen::Map<Eigen::Matrix<T, 3, 1>> residuals_translation(residuals + 4);
     
 
-    residuals_translation = res_transl;
     residuals_rotation  <<  res_quat.w(), res_quat.x(), res_quat.y(), res_quat.z();
-   
+    residuals_translation = res_transl;
+*/
+
+    res.template block<3,1>(0,0) = res_transl;
+    res.template block<3,1>(3,0) = 2.0*res_quat.vec();    
+
+    //residuals_translation = abs(res_transl[0]) + abs(res_transl[1]) + abs(res_transl[2]);
+
+    //*********************************************************************
+    //Debug Zone
+    std::cout << "t1" << t1_ << "\n" <<std::endl;
+    std::cout << "q1"<< q1_ << "\n" << std::endl;
+    //std::cout << "T12" << T12.inverse() << "\n" << std::endl;
+    //std::cout << "resmat " << res_mat << "\n" << std::endl;
+    //std::cout << "res_transl" << res_transl << "\n" << std::endl;
+    //*********************************************************************
 
     return true;
 }
-
 
 
 
@@ -201,7 +224,7 @@ bool ceresOptimization::CostFunction::operator()(const T* const q, const T* cons
   
         
 
-        problem->AddResidualBlock(new ceres::AutoDiffCostFunction<CostFunction, 7, 4, 3>(cost_function),
+        problem->AddResidualBlock(new ceres::AutoDiffCostFunction<CostFunction, 6, 4, 3>(cost_function),
                                 loss_function, 
                                 q_.data(), 
                                 t_.data());
