@@ -30,8 +30,8 @@ private:
 
 
 struct Optimization_Result{
-    Eigen::Quaterniond q;
-    Eigen::Vector3d t;
+    Eigen::Quaterniond q = Eigen::Quaterniond::Identity();
+    Eigen::Vector3d t = Eigen::Vector3d::Zero();
 
     //Optimal_Transformation_Publisher pub;
 };

@@ -47,7 +47,7 @@ Simple Cost Function for hand-eye calibration problem (AX = XB)
 ****************************************************************************************/
 
 template <typename T>
-bool ceresOptimization::CostFunction::operator()(const T* const q, const T* const t, T* residuals) const 
+bool ceresOptimization::CostFunction::operator()(const T* const q, const T* const t, T* residuals_ptr) const 
 {
     Eigen::Map<const Eigen::Quaternion<T>> q12_(q);
     Eigen::Map<const Eigen::Matrix<T, 3, 1>> t12_(t);
@@ -60,6 +60,7 @@ bool ceresOptimization::CostFunction::operator()(const T* const q, const T* cons
     Eigen::Quaternion<T> q2 = q2_.template cast<T>();
     Eigen::Matrix<T, 3, 1> t2 = t2_.template cast<T>();
 
+<<<<<<< HEAD
 
     //MATRIX DEFINITION
     /****************************************************/
@@ -86,10 +87,16 @@ bool ceresOptimization::CostFunction::operator()(const T* const q, const T* cons
     //Eigen::Matrix<T, 4, 4> res_mat = (T1 * T12) - (T12 * T2);
     Eigen::Matrix<T, 4, 4> res_mat = (T2.conjugate() * T12.conjugate() * T1 * T12);
 
+=======
+    // From Versatile Multi-LiDAR Accurate Self-Calibration System Based on Pose Graph Optimization
+    // By Inversion of Equations (3) and (4) 
+    Eigen::Quaternion<T> res_quat = (q12_*q2).inverse()*q1*q12_;
+    Eigen::Matrix<T, 3, 1> res_transl = (q1*t12_ + t1) - (q12_*t2 + t12_);
+>>>>>>> d2e59a7a2e099af2876b5e2ed0a66ed910b9657f
 
-    Eigen::Quaternion<T> res_quat(res_mat.template block<3,3>(0,0));
-    Eigen::Matrix<T, 3, 1> res_transl = res_mat.template block<3,1>(0,3);
+    Eigen::Map<Eigen::Matrix<T, 6, 1>> residuals(residuals_ptr);
 
+<<<<<<< HEAD
     //std::cout << "res_quat " << res_quat << "\n" << std::endl;
 
     //std::cout << "res_transl " << res_transl << "\n" << std::endl;
@@ -116,6 +123,10 @@ bool ceresOptimization::CostFunction::operator()(const T* const q, const T* cons
     //std::cout << "resmat " << res_mat << "\n" << std::endl;
     //std::cout << "res_transl" << res_transl << "\n" << std::endl;
     //*********************************************************************
+=======
+    residuals.template block<3, 1>(0, 0) = res_transl;
+    residuals.template block<3, 1>(3, 0) = T(2.0) * res_quat.vec();
+>>>>>>> d2e59a7a2e099af2876b5e2ed0a66ed910b9657f
 
     return true;
 }
@@ -207,34 +218,38 @@ bool ceresOptimization::CostFunction::operator()(const T* const q, const T* cons
 
     int i = 0;
     int sample_size = buffer_.accumulatedTraj.size();
+
+    if (sample_size > 2)
+    {
+
     Eigen::Matrix4d m1;
     Eigen::Matrix4d m2;
 
     //ceres::LossFunction* loss_function = new ceres::HuberLoss(2);
     ceres::LossFunction* loss_function = nullptr;
-    
+
     // Add cost function to the problem
     std::cout << "The sample size is " << sample_size << std::endl;
-    for (i = 1; i < sample_size; i++) {
-
+    for (i = 1; i < sample_size; i++)
+    {
         m1 = buffer_.accumulatedTraj[i].transformation_F.matrix();
         m2 = buffer_.accumulatedTraj[i].transformation_S.matrix();
 
-        auto* cost_function = new CostFunction(m1, m2);
-  
-        
 
+<<<<<<< HEAD
         problem->AddResidualBlock(new ceres::AutoDiffCostFunction<CostFunction, 6, 4, 3>(cost_function),
+=======
+        problem->AddResidualBlock(new ceres::AutoDiffCostFunction<CostFunction, 6, 4, 3>(m1, m2),
+>>>>>>> d2e59a7a2e099af2876b5e2ed0a66ed910b9657f
                                 loss_function, 
-                                q_.data(), 
+                                q_.coeffs().data(), 
                                 t_.data());
+    }
 
-        problem->SetParameterLowerBound(t_.data(), 2, -1);
-        problem->SetParameterUpperBound(t_.data(), 2, 1);
+    // problem->SetParameterLowerBound(t_.data(), 2, -1);
+    // problem->SetParameterUpperBound(t_.data(), 2, 1);
 
-        problem->SetManifold(q_.data(),quaternion_manifold);
-        }
-
+    problem->SetManifold(q_.coeffs().data(), quaternion_manifold);
 
 
     // Set Ceres Solver options
@@ -252,10 +267,12 @@ bool ceresOptimization::CostFunction::operator()(const T* const q, const T* cons
 
     // Display the results
     std::cout << summary.BriefReport() << "\n";
-    std::cout << "Optimized quaternion: " << q_[0] << ", " << q_[1] << ", "
-                                          << q_[2] << ", " << q_[3] << "\n";
+    std::cout << "Optimized quaternion: " << q_.w() << ", " << q_.x() << ", "
+                                          << q_.y() << ", " << q_.z() << "\n";
                                           
     std::cout << "Optimized translation: " << t_[0] << ", " << t_[1] << ", " << t_[2] << "\n";
+
+    }
 
     result.q = q_;
     result.t = t_;
