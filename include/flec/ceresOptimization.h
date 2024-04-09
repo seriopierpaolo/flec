@@ -36,6 +36,13 @@ public:
 
     };
 
+    void setInitial(Eigen::Vector3d t, Eigen::Quaterniond q)
+    {
+        this->q_ = q;
+        this->t_ = t;
+    }
+
+
     Optimization_Result solve();
 
     static Eigen::Matrix<double, 3, 3> SO3Exp(const Eigen::Matrix<double, 3, 1>& input_vector_);
@@ -51,8 +58,10 @@ private:
     ceres::Problem problem_;
     Eigen::Matrix4d Tl1_;
     Eigen::Matrix4d Tl2_;
-    Eigen::Vector4d q_;  // Quaternion parameters
+
+    Eigen::Quaterniond q_;  // Quaternion parameters
     Eigen::Vector3d t_;  // Translation parameters
+
     static constexpr double EPSILON = 1.0e-4;
 };
 

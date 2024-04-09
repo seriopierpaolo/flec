@@ -91,6 +91,10 @@
 
 
         // Solve the hand-eye calibration problem
+
+        // Set initial Condition
+        // solver.setInitial(this->optResult.t, this->optResult.q);
+
         this->optResult = solver.solve();
 
         publisher.publish(this->optResult.t, this->optResult.q);
