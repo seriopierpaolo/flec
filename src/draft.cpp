@@ -162,10 +162,10 @@ bool ceresOptimization::CostFunction::operator()(const T* const q, const T* cons
     Eigen::Matrix<T, 4, 4> res_mat = T2.inverse() * T12.inverse() * T1 * T12;
 
     Eigen::Matrix<T, 3, 3> res_mat3 = res_mat.template block<3,3>(0,0);
-    Eigen::Matrix<T, 3, 1> res_vec = SO3Log(res_mat3);
+    //Eigen::Matrix<T, 3, 1> res_vec = SO3Log(res_mat3);
     
     //HO TOLTO UN PEZZO DI QUATERNIONE
-    res = res_vec;
+    //res = res_vec;
     //res.template block<3,1>(0,0) <<  rot_res.x(), rot_res.y(), rot_res.z();
     //res.template block<3,1>(3,0) = transl_res.template cast<T>();
 

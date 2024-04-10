@@ -167,8 +167,8 @@ bool ceresOptimization::CostFunction::operator()(const T* const q, const T* cons
     Eigen::Matrix4d m1;
     Eigen::Matrix4d m2;
 
-    //ceres::LossFunction* loss_function = new ceres::HuberLoss(2);
-    ceres::LossFunction* loss_function = nullptr;
+    ceres::LossFunction* loss_function = new ceres::HuberLoss(30);
+    //ceres::LossFunction* loss_function = nullptr;
 
     // Add cost function to the problem
     std::cout << "The sample size is " << sample_size << std::endl;
