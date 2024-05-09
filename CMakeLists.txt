@@ -40,7 +40,10 @@ include_directories(
 add_executable(flec src/flec_node.cpp 
                     src/odometry_extractor.cpp 
                     src/ceresOptimization.cpp 
-                    src/transform_Publisher.cpp)
+                    src/transform_Publisher.cpp
+                    src/observation_module.cpp)
+
+
 
 target_link_libraries(flec
   ${catkin_LIBRARIES}

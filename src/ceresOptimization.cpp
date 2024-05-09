@@ -167,8 +167,8 @@ bool ceresOptimization::CostFunction::operator()(const T* const q, const T* cons
     Eigen::Matrix4d m1;
     Eigen::Matrix4d m2;
 
-    ceres::LossFunction* loss_function = new ceres::HuberLoss(30);
-    //ceres::LossFunction* loss_function = nullptr;
+    //ceres::LossFunction* loss_function = new ceres::HuberLoss(1);
+    ceres::LossFunction* loss_function = nullptr;
 
     // Add cost function to the problem
     std::cout << "The sample size is " << sample_size << std::endl;
@@ -185,8 +185,8 @@ bool ceresOptimization::CostFunction::operator()(const T* const q, const T* cons
                                 t_.data());
     }
 
-    // problem->SetParameterLowerBound(t_.data(), 2, -1);
-    // problem->SetParameterUpperBound(t_.data(), 2, 1);
+     //problem->SetParameterLowerBound(t_.data(), 2, -0.01);
+     //problem->SetParameterUpperBound(t_.data(), 2, 0.01);
 
     problem->SetManifold(q_.coeffs().data(), quaternion_manifold);
 
@@ -197,6 +197,8 @@ bool ceresOptimization::CostFunction::operator()(const T* const q, const T* cons
     ceres::Solver::Options options;
     options.linear_solver_type = ceres::SPARSE_SCHUR;
     options.minimizer_progress_to_stdout = true;
+    //(?)
+    options.update_state_every_iteration = true;
 
     // Solve the problem
     ceres::Solver::Summary summary;
@@ -210,6 +212,8 @@ bool ceresOptimization::CostFunction::operator()(const T* const q, const T* cons
                                           << q_.y() << ", " << q_.z() << "\n";
                                           
     std::cout << "Optimized translation: " << t_[0] << ", " << t_[1] << ", " << t_[2] << "\n";
+
+    std::cout << "\n" << "\n" << "\n" << jacobian(Tl1_, Tl2_, t_, q_) << std::endl;
 
     }
 
