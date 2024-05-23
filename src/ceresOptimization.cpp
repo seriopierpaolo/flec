@@ -2,8 +2,11 @@
 #include <ceres/autodiff_cost_function.h>
 #include <ceres/internal/eigen.h>
 #include <iostream>
+
+#include <flec/observability_module/observation_module.h>
 #include <flec/ceresOptimization.h>
 #include <flec/datastructure.h>
+#include <flec/utils.h>
 
 #include <ceres/loss_function.h>
 
@@ -24,6 +27,58 @@ ceresOptimization::ceresOptimization(tfAccumulator &b )
 ceresOptimization::~ceresOptimization() {
 }
 
+
+class JIterationCallback : public ceres::IterationCallback {
+public:
+  ceres::CRSMatrix jacobian;
+  ceres::Problem* problem;  // Pointer to the problem instance
+
+  JIterationCallback(ceres::Problem* prob) : problem(prob) {}
+
+  ~JIterationCallback() override = default;
+
+  ceres::CallbackReturnType operator()(const ceres::IterationSummary& summary) override {
+    ceres::Problem::EvaluateOptions eval_options;
+    
+    
+    problem->Evaluate(eval_options, nullptr, nullptr, nullptr, &jacobian);
+    Eigen::MatrixXd jC2E = CRSMatrixToEigen(jacobian);
+    Eigen::MatrixXd jCP = jC2E.transpose()*jC2E;
+    Eigen::JacobiSVD<Eigen::MatrixXd, Eigen::ComputeThinU | Eigen::ComputeThinV> svd(jCP);
+    //std::cout << "The singular values of the Ceres Jacobian are:\n" << svd.singularValues() << std::endl;
+    //Eigen::VectorXd arraySvd = svd.singularValues();
+    bool hasZeroSingularValue = (svd.singularValues().minCoeff() < 0.03);
+    if (hasZeroSingularValue){
+    //Eigen::MatrixXd jCP = jC2E.transpose()*jC2E;
+    
+    // Print Jacobian
+    //std::cout << "\n" << "\n" << "Jacobian computed from CERES (J_t * J): \n"<< jCP << std::endl;
+    std::cout << "The singular values of the Ceres Jacobian are:\n" << svd.singularValues() << std::endl;
+
+    return ceres::SOLVER_TERMINATE_SUCCESSFULLY;
+    }
+    else return ceres::SOLVER_CONTINUE;
+  }
+};
+
+/*
+  class JIterationCallback : public ceres::IterationCallback {
+  public:
+    
+    ceres::CRSMatrix jacobian;
+
+    JIterationCallback() = default;
+
+    ~JIterationCallback() override = default;
+
+      ceres::CallbackReturnType operator ()(ceres::Problem problem, std::vector<double*> parameterBlocks) {
+      problem.Evaluate(ceres::Problem::EvaluateOptions(), nullptr, nullptr, nullptr, &jacobian);
+      return ceres::SOLVER_CONTINUE;
+    }
+  };
+*/
+
+
 //CostFunction class that implements all the methods needed for a ceres cost function
 ceresOptimization::CostFunction::CostFunction(Eigen::Matrix4d input_t1, Eigen::Matrix4d input_t2)
 {
@@ -39,8 +94,21 @@ ceresOptimization::CostFunction::CostFunction(Eigen::Matrix4d input_t1, Eigen::M
     t2_ = Tl2_cf.block<3, 1>(0, 3);
 }
 
+/*
+class MyIterationCallback : public ceres::IterationCallback {
+ public:
+  MyIterationCallback(const double* m, const double* c) {}
+  ~MyIterationCallback() override = default;
+  ceres::CallbackReturnType operator()(
+      const ceres::IterationSummary& summary) final {
 
-//7 RESIDUALS!
+    return ceres::SOLVER_CONTINUE;
+  }
+};
+*/
+
+
+//6 RESIDUALS!
 /****************************************************************************************
 Simple Cost Function for hand-eye calibration problem (AX = XB)
 
@@ -60,11 +128,17 @@ bool ceresOptimization::CostFunction::operator()(const T* const q, const T* cons
     Eigen::Quaternion<T> q2 = q2_.template cast<T>();
     Eigen::Matrix<T, 3, 1> t2 = t2_.template cast<T>();
 
+    ceres::CRSMatrix jacobianCeres;
+    
+    
+
     // From Versatile Multi-LiDAR Accurate Self-Calibration System Based on Pose Graph Optimization
     // By Inversion of Equations (3) and (4) 
     Eigen::Quaternion<T> res_quat = (q12_*q2).inverse()*q1*q12_;
     Eigen::Matrix<T, 3, 1> res_transl = (q1*t12_ + t1) - (q12_*t2 + t12_);
 
+    //ceresOptimization::CostFunction::Evaluate(ceres::Problem::EvaluateOptions(), q, t, residuals_ptr, nullptr, &jacobianCeres);
+    
     Eigen::Map<Eigen::Matrix<T, 6, 1>> residuals(residuals_ptr);
 
     res.template block<3, 1>(0, 0) = res_transl;
@@ -73,80 +147,6 @@ bool ceresOptimization::CostFunction::operator()(const T* const q, const T* cons
     return true;
 }
 
-
-
-
-
-
-    /**
-    * @brief
-    * Compute the SO3 EXP operation.
-    * @param input_vector_
-    * Input vector.
-    * @return
-    * Result of the operation.
-    */
-    Eigen::Matrix<double, 3, 3> ceresOptimization::SO3Exp(const Eigen::Matrix<double, 3, 1>& input_vector_)
-    {
-        Eigen::Matrix<double, 3, 3> exp_result = Eigen::MatrixXd::Identity(3, 3);
-        
-        double input_vector_norm = input_vector_.norm();
-        if(input_vector_norm > EPSILON)
-        {
-            Eigen::Matrix<double, 3, 3> input_skew_symmetric = skewSymmetric(input_vector_/input_vector_norm);
- 
-            // Rodrigues Transformation
-            exp_result += sin(input_vector_norm)*input_skew_symmetric
-                            + (1.0 - cos(input_vector_norm))*input_skew_symmetric*input_skew_symmetric;
-        }
- 
-        return exp_result;
-    }
-
-
-     /**
-    * @brief
-    * Compute the SO3 LOG operation.
-    * @param input_matrix_
-    * Input matrix.
-    * @return
-    * Result of the operation.
-    */
-    template <typename T>
-    Eigen::Matrix<T, 3, 1> ceresOptimization::SO3Log(Eigen::Matrix<T, 3, 3>& input_matrix_)
-    {
-        Eigen::Matrix3d in_mat = input_matrix_.template cast<T>();
-        double input_matrix_trace = in_mat.trace();
-        
-        double scalar_constant = (input_matrix_trace > 3.0 - EPSILON) ? 0.0 : acos(0.5*(input_matrix_trace - 1.0));
- 
-        Eigen::Matrix<T, 3, 1> output_vector(input_matrix_(2, 1) - input_matrix_(1, 2),
-                                                  input_matrix_(0, 2) - input_matrix_(2, 0),
-                                                  input_matrix_(1, 0) - input_matrix_(0, 1));
- 
-        Eigen::Matrix<T, 3, 1> output = (fabs(scalar_constant) < EPSILON) ? (0.5*output_vector) : ((0.5*scalar_constant/sin(scalar_constant))*output_vector);
-
-         return output.template cast<T>();
-    }
-
-    /**
-    * @brief
-    * Compute a skew-symmetric matrix from a vector.
-    * @param input_vector_
-    * Input vector.
-    * @return
-    * Associated skew-symmetric matrix.
-    */
-    Eigen::Matrix<double, 3, 3> ceresOptimization::skewSymmetric(const Eigen::Matrix<double, 3, 1>& input_vector_)
-    {
-        Eigen::Matrix<double, 3, 3> output_matrix = Eigen::Matrix<double, 3, 3>::Zero();
- 
-        output_matrix << 0.0,              -input_vector_(2),  input_vector_(1),
-                         input_vector_(2),  0.0,              -input_vector_(0),
-                        -input_vector_(1),  input_vector_(0),  0.0;
- 
-        return output_matrix;
-    }
 
 
 
@@ -197,8 +197,15 @@ bool ceresOptimization::CostFunction::operator()(const T* const q, const T* cons
     ceres::Solver::Options options;
     options.linear_solver_type = ceres::SPARSE_SCHUR;
     options.minimizer_progress_to_stdout = true;
-    //(?)
+
     options.update_state_every_iteration = true;
+    //options.check_gradients = true;
+
+
+
+    //Reaching Jacobian while the optimization is running
+    JIterationCallback callback(problem.get());
+    options.callbacks.push_back(&callback);
 
     // Solve the problem
     ceres::Solver::Summary summary;
@@ -213,13 +220,30 @@ bool ceresOptimization::CostFunction::operator()(const T* const q, const T* cons
                                           
     std::cout << "Optimized translation: " << t_[0] << ", " << t_[1] << ", " << t_[2] << "\n";
 
-    std::cout << "\n" << "\n" << "\n" << jacobian(Tl1_, Tl2_, t_, q_) << std::endl;
+    /*
+    //Jacobians
+    Eigen::MatrixXd jF = jacobian(Tl1_, Tl2_, t_, q_);
 
+    std::cout << "\n \n \n" << "Jacobian computed with FORMULAS:\n"
+            << jF << "\n \n \n" <<std::endl;
+
+
+    
+    //COMPUTED INSIDE THE COST FUNCTION
+    // Access Jacobian
+    ceres::CRSMatrix jacobianCeres;
+    problem->Evaluate(ceres::Problem::EvaluateOptions(), nullptr, nullptr, nullptr, &jacobianCeres);
+    Eigen::MatrixXd jC2E = CRSMatrixToEigen(jacobianCeres);
+    Eigen::MatrixXd jCP = jC2E.transpose()*jC2E;
+    
+    // Print Jacobian
+    std::cout << "\n" << "\n" << "Jacobian computed from CERES (J_t * J): \n"<< jCP << std::endl;
     }
-
+    */
+    }
     result.q = q_;
     result.t = t_;
-
+    
     return result;
 
 

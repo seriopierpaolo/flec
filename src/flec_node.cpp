@@ -12,6 +12,7 @@
 #include <flec/datastructure.h>
 
 #include <flec/ceresOptimization.h>
+//#include <flec/observability_module/svdPublisher.h>
 //#include <flec/pc_PostProcessing.h>
 
 using namespace message_filters;
@@ -30,7 +31,8 @@ int main(int argc, char **argv)
     std::string odometry_topic_right;
 
     OdometryExtractor odometry_extractor;
-    Results_Publisher publisher;
+    //Results_Publisher publisher;
+    //svdPublisher svd_publisher(nh);
     //Optimal_Transformation_Publisher pub(nh);
     
     //PC_PostProcessing post_proc(nh);

@@ -71,10 +71,6 @@ bool ceresOptimization::CostFunction::operator()(const T* const q, const T* cons
 
 
 
-
-
-
-
 /****************************************************************************************
 Cost Function from formula used in PoseGraph3D problem listed in ceres example
 ****************************************************************************************/

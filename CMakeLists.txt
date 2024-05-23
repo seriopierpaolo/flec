@@ -14,7 +14,22 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   nav_msgs
   message_filters
+  message_generation
   #Ceres
+)
+
+
+
+## Add message files
+#add_message_files(
+#  FILES
+#  svd.msg
+#)
+
+## Generate added messages and services
+generate_messages(
+  DEPENDENCIES
+  std_msgs
 )
 
 find_package(Ceres REQUIRED)
@@ -23,7 +38,7 @@ include_directories(${CERES_INCLUDE_DIRS})
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES flec
-  CATKIN_DEPENDS eigen roscpp std_msgs nav_msgs message_filters
+  CATKIN_DEPENDS eigen roscpp std_msgs nav_msgs message_filters message_runtime
   )
 
 
@@ -41,7 +56,9 @@ add_executable(flec src/flec_node.cpp
                     src/odometry_extractor.cpp 
                     src/ceresOptimization.cpp 
                     src/transform_Publisher.cpp
-                    src/observation_module.cpp)
+                    src/observability_module/observation_module.cpp
+                    ##src/observability_module/svd_Publisher.cpp
+                    src/utils/handlers.cpp)
 
 
 

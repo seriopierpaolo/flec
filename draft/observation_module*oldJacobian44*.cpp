@@ -1,41 +1,10 @@
-
-#include <eigen3/Eigen/Core>
-#include <eigen3/Eigen/Geometry>
-#include <ceres/ceres.h>
-
-#include <flec/odometry_extractor.h>
-#include <flec/datastructure.h>
-
-#include <flec/ceresOptimization.h>
+#include <flec/observability_module/observation_module.h>
 
 
 
 
-
-/**
-    * @brief
-    * Compute a skew-symmetric matrix from a vector.
-    * @param input_vector_
-    * Input vector.
-    * @return
-    * Associated skew-symmetric matrix.
-    */
-    Eigen::Matrix<double, 3, 3> skewSymmetric(const Eigen::Matrix<double, 3, 1>& input_vector_)
-    {
-        Eigen::Matrix<double, 3, 3> output_matrix = Eigen::Matrix<double, 3, 3>::Zero();
- 
-        output_matrix << 0.0,              -input_vector_(2),  input_vector_(1),
-                         input_vector_(2),  0.0,              -input_vector_(0),
-                        -input_vector_(1),  input_vector_(0),  0.0;
- 
-        return output_matrix;
-    }
-
-
-
-
-Eigen::Matrix3d
-jacobian(Eigen::Matrix3d t1, Eigen::Matrix3d t2, Eigen::Vector3d t12_, Eigen::Quaterniond q12_)
+Eigen::MatrixXd
+jacobian(Eigen::Matrix4d t1, Eigen::Matrix4d t2, Eigen::Vector3d t12_, Eigen::Quaterniond q12_)
 {
     //Extracting rotation and translation components
     //--------------------------------------------------------------
@@ -67,6 +36,7 @@ jacobian(Eigen::Matrix3d t1, Eigen::Matrix3d t2, Eigen::Vector3d t12_, Eigen::Qu
     //Translation Part Jacobian
 
     Eigen::Matrix3d Jt_dt = q1.toRotationMatrix() - Eigen::Matrix3d::Identity();
+
     Eigen::Matrix3d Jt_dq = -skewSymmetric(q12_.toRotationMatrix()*t2_t);
 
 
@@ -167,9 +137,14 @@ Eigen::Matrix4d Jq_dq { {J11, J12, J13, J14},
                         {J41, J42, J43, J44}
 };
 
-Eigen::JacobiSVD<Eigen::MatrixXd, Eigen::ComputeThinU | Eigen::ComputeThinV> svd(Jq_dq);
-std::cout << "Its singular values are:" << svd.singularValues() << std::endl;
 
-Eigen::Matrix3d mat;
-return mat;
+Eigen::JacobiSVD<Eigen::MatrixXd, Eigen::ComputeThinU | Eigen::ComputeThinV> svdt(Jt_dt);
+std::cout << "\n \n \n" << std::endl;
+std::cout << "Singular values of the translation part:\n" << svdt.singularValues() << "\n" <<std::endl;
+
+Eigen::JacobiSVD<Eigen::MatrixXd, Eigen::ComputeThinU | Eigen::ComputeThinV> svdq(Jq_dq);
+std::cout << "Singular values of the rotational part:\n" << svdq.singularValues() << std::endl;
+
+//Eigen::Matrix3d mat = ;
+return Jq_dq;
 }
