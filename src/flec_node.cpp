@@ -29,8 +29,11 @@ int main(int argc, char **argv)
 
     std::string odometry_topic_left;
     std::string odometry_topic_right;
-
-    OdometryExtractor odometry_extractor;
+    
+    TfAccumulator buffer;
+    
+    OdometryExtractor odometry_extractor(&buffer);
+    
     //Results_Publisher publisher;
     //svdPublisher svd_publisher(nh);
     //Optimal_Transformation_Publisher pub(nh);
@@ -43,8 +46,8 @@ int main(int argc, char **argv)
     
     //pc_sub = nh.subscribe("/odom_trajectory_right",10,)
 
-    optimization = nh.advertise<geometry_msgs::TransformStamped>("l2_to_l1_transform", 10);
-    odometry_extractor.publisher.pub_ = optimization;
+    //ptimization = nh.advertise<geometry_msgs::TransformStamped>("l2_to_l1_transform", 10);
+    //odometry_extractor.publisher.pub_ = optimization;
 
 
 

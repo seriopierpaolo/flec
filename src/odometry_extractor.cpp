@@ -10,33 +10,16 @@
 
 #include <flec/ceresOptimization.h>
 
-/*
-    void 
-    publish
-    (const Eigen::Vector3d& translation, const Eigen::Quaterniond& rotation, ros::Publisher pub_) 
-    {
-        geometry_msgs::TransformStamped msg;
-        msg.header.stamp = ros::Time::now();
-        msg.header.frame_id = "Lidar1";
-        msg.child_frame_id = "Lidar2";
-        msg.transform.translation.x = translation.x();
-        msg.transform.translation.y = translation.y();
-        msg.transform.translation.z = translation.z();
-        msg.transform.rotation.x = rotation.x();
-        msg.transform.rotation.y = rotation.y();
-        msg.transform.rotation.z = rotation.z();
-        msg.transform.rotation.w = rotation.w();
-        pub_.publish(msg);
-    }
-*/
 
 
-    OdometryExtractor::OdometryExtractor()  
+    OdometryExtractor::OdometryExtractor(TfAccumulator* buffer)  
     {
+        b = buffer;
+        
     };
 
-    TfBundle tb;
-    tfAccumulator tfBuffer;
+    
+    
 
     std::tuple <Eigen::Quaterniond, Eigen::Vector3d>
     OdometryExtractor::extractTransformation (nav_msgs::OdometryConstPtr msg) 
@@ -64,41 +47,33 @@
         Eigen::Vector3d transF; 
         std::tie(qF, transF) = extractTransformation(msg1);
         Eigen::Matrix3d rotF = qF.toRotationMatrix();
-        this->tb.header_F = msg1->header;
-        this->tb.transformation_F.translation() = transF;
-        this->tb.transformation_F.linear()=rotF; 
+        //std::cout << this->b->pair.header_F  << std::endl;
+        //std::cout << msg1->header  << std::endl;
+        this->b->pair.header_F = msg1->header;
+
+        this->b->pair.transformation_F.translation() = transF;
+        this->b->pair.transformation_F.linear()=rotF; 
 
         //Second Lidar
         Eigen::Quaterniond qS;
         Eigen::Vector3d transS; 
         std::tie(qS, transS) = extractTransformation(msg2);
         Eigen::Matrix3d rotS = qS.toRotationMatrix();
-        this->tb.header_S = msg2->header;
-        this->tb.transformation_S.translation() = transS;
-        this->tb.transformation_S.linear()=rotS; 
+        this->b->pair.header_S = msg2->header;
+        this->b->pair.transformation_S.translation() = transS;
+        this->b->pair.transformation_S.linear()=rotS; 
 
         //ROS_INFO("Left time is %d", this->transformation.header_Left.stamp.nsec);
-        this->performOptimization();
+        //this->performOptimization();
+        
+        //Update the buffer with the current pair (and eventually move to another batch)
+        
+        this->b->updateBatch();
+        //this->b->updateBuffer(*tb);
+
         
     }
 
-    void OdometryExtractor::performOptimization() {
 
-        
-
-        tfBuffer.addElement(tb);
-        ceresOptimization solver(tfBuffer);
-
-
-        // Solve the hand-eye calibration problem
-
-        // Set initial Condition
-        // solver.setInitial(this->optResult.t, this->optResult.q);
-
-        this->optResult = solver.solve();
-
-        publisher.publish(this->optResult.t, this->optResult.q);
-
-    }
 
 

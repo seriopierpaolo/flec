@@ -12,7 +12,7 @@ class ceresOptimization {
 
 
 public:
-    ceresOptimization(tfAccumulator& Buffer);
+    ceresOptimization(TfBatch& Buffer, bool useCallbackFlag);
     ~ceresOptimization();
 
  /*    
@@ -50,8 +50,7 @@ public:
     Eigen::Quaternion<double> q2_;
     Eigen::Matrix<double, 3, 1> t1_;
     Eigen::Matrix<double, 3, 1> t2_;
-
-
+    
     };
 
     void setInitial(Eigen::Vector3d t, Eigen::Quaterniond q)
@@ -66,13 +65,16 @@ public:
 
 private:
 
-    tfAccumulator buffer_;
+    TfBatch buffer_;
     ceres::Problem problem_;
     Eigen::Matrix4d Tl1_;
     Eigen::Matrix4d Tl2_;
 
     Eigen::Quaterniond q_;  // Quaternion parameters
     Eigen::Vector3d t_;  // Translation parameters
+
+    bool useCallback;
+
 
     
 };

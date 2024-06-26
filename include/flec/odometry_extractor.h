@@ -20,16 +20,18 @@ class OdometryExtractor
     public:
     
     //Constructor
-    OdometryExtractor();
+    OdometryExtractor(TfAccumulator* buffer);
 
-    //Container for two different transformations simultaneously
-    TfBundle tb;
+    //Pointer to the segment buffer and its subsets
+    TfAccumulator* b;
+    //TfPair* tp = &b->pair;
+    //TfBatch* tb = &b->batch;
 
     //Container for optimization results
     Optimization_Result optResult;
 
     //Class to publish all the needed results
-    Results_Publisher publisher;
+    //Results_Publisher publisher;
 
     //extractTransformation extracts the pose from a nav_msgs/Odometry and it is used in odometryCallbackUnique  
     std::tuple <Eigen::Quaterniond, Eigen::Vector3d>
@@ -39,8 +41,7 @@ class OdometryExtractor
     void odometryCallbackUnique(const nav_msgs::OdometryConstPtr &msg1, const nav_msgs::OdometryConstPtr &msg2);
 
     //instantiate a ceresOptimization class with all the relevant information
-    void performOptimization();
-
+    //void performOptimization();
 
     
     

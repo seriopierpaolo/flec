@@ -11,32 +11,16 @@
 #include <geometry_msgs/TransformStamped.h>
 
 
-class Results_Publisher {
-public:
-    Results_Publisher();
-
-    ros::Publisher pub_;
-
-    void publish(const Eigen::Vector3d& translation, const Eigen::Quaterniond& rotation);
-
-
-private:
-
-    
-    //const std::string parent_frame_id_;
-    //const std::string child_frame_id_;
-};
-
-
-
 struct Optimization_Result{
     Eigen::Quaterniond q = Eigen::Quaterniond::Identity();
     Eigen::Vector3d t = Eigen::Vector3d::Zero();
+    Eigen::VectorXd svd;
+    //bool jacobianSVDCheck;
 
     //Optimal_Transformation_Publisher pub;
 };
 
-struct TfBundle{
+struct TfPair{
 
     std_msgs::Header header_F;
     Eigen::Affine3d transformation_F;
@@ -44,28 +28,41 @@ struct TfBundle{
     std_msgs::Header header_S;
     Eigen::Affine3d transformation_S;
 
+};
+
+
+class TfBatch {
+private:
     
+
+public:
+
+    std::vector<TfPair> currentBatch;
+
+    int nSample;
+    double batch_start_time;
+    
+    TfBatch() {this->nSample = 0;}
 
 };
 
 
-class tfAccumulator {
-private:
+
+
+
+class TfAccumulator {
+    private:
     
     
 
 public:
-    std::vector<TfBundle> accumulatedTraj;
-    int nSample;
+    TfPair pair;
+    TfBatch batch;
+    std::vector<TfBatch> segmentBuffer;
     
-    tfAccumulator() {this->nSample = 0;}
-    
-    //Callback
-    void addElement(TfBundle newBundle)
-    {
-        accumulatedTraj.push_back(newBundle);
-    }
+    void updateBatch();
 
+    void updateBuffer();
 };
 
 

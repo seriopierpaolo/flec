@@ -1,13 +1,25 @@
-#include <eigen3/Eigen/Core>
-#include <eigen3/Eigen/Geometry>
+#ifndef OBSERVABILITY_ENFORCER_H
+#define OBSERVABILITY_ENFORCER_H
 
 
-#include <flec/utils.h>
-#include <flec/odometry_extractor.h>
-#include <flec/datastructure.h>
+#include <ceres/ceres.h>
+#include <Eigen/Dense>
+#include <vector>
 #include <flec/ceresOptimization.h>
 
 
+// Custom callback to enforce observability constraints using TSVD
+class ObservabilityEnforcer : public ceres::IterationCallback {
+public:
+    ObservabilityEnforcer(double epsilon, ceres::Problem& problem);
 
-Eigen::MatrixXd
-jacobian(Eigen::Matrix4d t1, Eigen::Matrix4d t2, Eigen::Vector3d t12_, Eigen::Quaterniond q12_);
+    ceres::CallbackReturnType operator()(const ceres::IterationSummary& summary) override;
+
+private:
+    void UpdateParameters(const Eigen::VectorXd& updates);
+
+    double epsilon_;
+    ceres::Problem& problem_;
+};
+
+#endif // OBSERVABILITY_ENFORCER_H

@@ -55,10 +55,11 @@ include_directories(
 add_executable(flec src/flec_node.cpp 
                     src/odometry_extractor.cpp 
                     src/ceresOptimization.cpp 
-                    src/transform_Publisher.cpp
+                    #src/transform_Publisher.cpp
                     src/observability_module/observation_module.cpp
                     ##src/observability_module/svd_Publisher.cpp
-                    src/utils/handlers.cpp)
+                    src/utils/handlers.cpp
+                    src/batch_manager.cpp)
 
 
 
