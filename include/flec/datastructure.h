@@ -59,6 +59,7 @@ public:
     TfPair pair;
     TfBatch batch;
     std::vector<TfBatch> segmentBuffer;
+    TfBatch macroBatch;
     
     void updateBatch();
 

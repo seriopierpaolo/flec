@@ -189,7 +189,7 @@ bool ceresOptimization::CostFunction::operator()(const T* const q, const T* cons
     ceres::LossFunction* loss_function = nullptr;
 
     // Add cost function to the problem
-    std::cout << "The sample size is " << sample_size << std::endl;
+    //std::cout << "The sample size is " << sample_size << std::endl;
     
     for (i = 1; i <= sample_size - 1; i++)
     //WHY SAMPLE SIZE-1 ???????
@@ -244,12 +244,13 @@ bool ceresOptimization::CostFunction::operator()(const T* const q, const T* cons
     ceres::Solver::Options options;
     options.linear_solver_type = ceres::SPARSE_SCHUR;
     options.minimizer_progress_to_stdout = true;
+    options.dense_linear_algebra_library_type = ceres::CUDA;
 
     options.update_state_every_iteration = true;
     //options.check_gradients = true;
 
    
-    double epsilon = 1e-6;
+    double epsilon = 5;
 
     if (useCallback){
     //Reaching Jacobian while the optimization is running
@@ -264,14 +265,14 @@ bool ceresOptimization::CostFunction::operator()(const T* const q, const T* cons
     ceres::Solver::Summary summary;
     ceres::Solve(options, problem.get(), &summary);
 
-    
+      if (useCallback){
     // Display the results
     std::cout << summary.BriefReport() << "\n";
     std::cout << "Optimized quaternion: " << q_.w() << ", " << q_.x() << ", "
                                           << q_.y() << ", " << q_.z() << "\n";
                                           
     std::cout << "Optimized translation: " << t_[0] << ", " << t_[1] << ", " << t_[2] << "\n";
-
+    }
     
     /*
     //Jacobians
@@ -301,7 +302,7 @@ bool ceresOptimization::CostFunction::operator()(const T* const q, const T* cons
 
        Eigen::VectorXd singularValues = svd.singularValues();
       Eigen::VectorXd newSingularValues = singularValues.head(singularValues.size() - 1);
-      std::cout << "The first five singular values of the Ceres Jacobian are:\n" << newSingularValues << std::endl;
+      //std::cout << "The first five singular values of the Ceres Jacobian are:\n" << newSingularValues << std::endl;
     
     Eigen::VectorXd svds = newSingularValues;
     result.svd = svds;

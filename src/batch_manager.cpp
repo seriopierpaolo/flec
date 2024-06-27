@@ -5,7 +5,7 @@
 
     void performOptimization(TfBatch* batch) {
 
-        bool useCallbackFlag = 0;
+        bool useCallbackFlag = 1;
         ceresOptimization solver(*batch, useCallbackFlag);
 
         Optimization_Result optResult = solver.solve();
@@ -23,7 +23,7 @@
 
         Optimization_Result optResult = solver.solve();
         
-        if (optResult.svd.minCoeff() > 1){
+        if (optResult.svd.minCoeff() > 5){
             return true;
         }
         else 
@@ -46,10 +46,11 @@ void TfAccumulator::updateBatch()
         
       }
     
-    if (pair_time - this->batch.batch_start_time > 10) {
+    if (pair_time - this->batch.batch_start_time > 30) {
         if (checkJacobianSVD(&this->batch)) {
             updateBuffer();
             this->batch.batch_start_time = pair_time;
+            
             // Update the tfBuffer
         } else {
             // this->batch.currentBatch.push_back(this->pair);
@@ -78,10 +79,19 @@ void TfAccumulator::updateBatch()
 }
 
 void TfAccumulator::updateBuffer(){
+    
+    for (int i = 0; i < this->batch.currentBatch.size(); i++){
+        //std::cout<<"i"<<std::endl;
+        this->macroBatch.currentBatch.push_back(this->batch.currentBatch[i]);
+    }
     this->segmentBuffer.push_back(this->batch);
     this->batch = TfBatch();
-    std::cout << this->segmentBuffer.size() << std::endl;
+
+    performOptimization(&this->macroBatch);
+    //std::cout << this->segmentBuffer.size() << std::endl;
+    
 }
+
 
 
 

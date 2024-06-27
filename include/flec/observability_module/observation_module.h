@@ -6,6 +6,7 @@
 #include <Eigen/Dense>
 #include <vector>
 #include <flec/ceresOptimization.h>
+#include <flec/utils.h>
 
 
 // Custom callback to enforce observability constraints using TSVD
@@ -16,7 +17,7 @@ public:
     ceres::CallbackReturnType operator()(const ceres::IterationSummary& summary) override;
 
 private:
-    void UpdateParameters(const Eigen::VectorXd& updates);
+    void UpdateParameters(Eigen::MatrixXd J, std::vector<double> residuals);
 
     double epsilon_;
     ceres::Problem& problem_;
