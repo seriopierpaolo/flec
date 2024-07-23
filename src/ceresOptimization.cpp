@@ -185,8 +185,8 @@ bool ceresOptimization::CostFunction::operator()(const T* const q, const T* cons
     Eigen::Matrix4d m1;
     Eigen::Matrix4d m2;
 
-    //ceres::LossFunction* loss_function = new ceres::HuberLoss(1);
-    ceres::LossFunction* loss_function = nullptr;
+    ceres::LossFunction* loss_function = new ceres::HuberLoss(0.1);
+    //ceres::LossFunction* loss_function = nullptr;
 
     // Add cost function to the problem
     //std::cout << "The sample size is " << sample_size << std::endl;
@@ -240,17 +240,18 @@ bool ceresOptimization::CostFunction::operator()(const T* const q, const T* cons
       }
     //}
     // Set Ceres Solver options
-
     ceres::Solver::Options options;
     options.linear_solver_type = ceres::SPARSE_SCHUR;
     options.minimizer_progress_to_stdout = true;
     options.dense_linear_algebra_library_type = ceres::CUDA;
 
     options.update_state_every_iteration = true;
+
+    
     //options.check_gradients = true;
 
    
-    double epsilon = 5;
+    double epsilon = 2;
 
     if (useCallback){
     //Reaching Jacobian while the optimization is running

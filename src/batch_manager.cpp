@@ -23,7 +23,7 @@
 
         Optimization_Result optResult = solver.solve();
         
-        if (optResult.svd.minCoeff() > 5){
+        if (optResult.svd.minCoeff() > 10){
             return true;
         }
         else 
@@ -46,7 +46,7 @@ void TfAccumulator::updateBatch()
         
       }
     
-    if (pair_time - this->batch.batch_start_time > 30) {
+    if (pair_time - this->batch.batch_start_time > 20) {
         if (checkJacobianSVD(&this->batch)) {
             updateBuffer();
             this->batch.batch_start_time = pair_time;
