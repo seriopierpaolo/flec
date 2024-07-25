@@ -1,0 +1,60 @@
+
+<launch>
+
+  <arg name="robot_namespace" default="robot"/>
+  <arg name="rviz" default="true"/>
+
+<!-- =============================================================================== -->
+<!--LEFT ODOMETRY-->
+
+  <!-- DLO Odometry Node -->
+  <node ns="$(arg robot_namespace)" name="dlo_odom_left" pkg="direct_lidar_odometry" type="dlo_odom_node" clear_params="true">
+
+    <!-- Load parameters -->
+    <rosparam file="$(find direct_lidar_odometry)/cfg/dlo.yaml" command="load"/>
+    <rosparam file="$(find direct_lidar_odometry)/cfg/params.yaml" command="load"/>
+
+    <!-- Subscriptions -->
+    <remap from="~pointcloud" to="/hesai/left"/>
+
+    <!-- Publications -->
+    <remap from="~odom" to="dlo/odom_left"/>
+    <remap from="~pose" to="dlo/pose_left"/>
+    <remap from="~kfs" to="dlo/keyframe_left"/>
+    <remap from="~keyframe" to="dlo/pointcloud/keyframe_left"/>
+    <remap from="~pcodom" to="dlo/pcodom_left"/>
+
+  </node>
+<!-- =============================================================================== -->
+
+<!-- =============================================================================== -->
+  <!--RIGHT ODOMETRY-->
+
+  <!-- DLO Odometry Node -->
+  <node ns="$(arg robot_namespace)" name="dlo_odom_right" pkg="direct_lidar_odometry" type="dlo_odom_node" clear_params="true">
+
+    <!-- Load parameters -->
+    <rosparam file="$(find direct_lidar_odometry)/cfg/dlo.yaml" command="load"/>
+    <rosparam file="$(find direct_lidar_odometry)/cfg/params.yaml" command="load"/>
+
+    <!-- Subscriptions -->
+    <remap from="~pointcloud" to="/hesai/right"/>
+
+    <!-- Publications -->
+    <remap from="~odom" to="dlo/odom_right"/>
+    <remap from="~pose" to="dlo/pose_right"/>
+    <remap from="~kfs" to="dlo/keyframe_right"/>
+    <remap from="~keyframe" to="dlo/pointcloud/keyframe_right"/>
+    <remap from="~pcodom" to="dlo/pcodom_right"/>
+
+  </node>
+<!-- =============================================================================== -->
+
+
+<!-- =============================================================================== -->
+<!--ROSBAG-->
+  <node pkg="rosbag" type="play" name="player" output="screen" args="--clock /home/rosbags/cadriano_towing_sensors_mapping_1.bag"/>
+
+<!-- =============================================================================== -->
+
+</launch>

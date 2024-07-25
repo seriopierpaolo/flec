@@ -6,10 +6,11 @@
 #include <ros/ros.h>
 #include <nav_msgs/Odometry.h>
 #include <std_msgs/Header.h>
-#include <eigen3/Eigen/Core>
-#include <eigen3/Eigen/Geometry>
+#include <Eigen/Core>
+#include <Eigen/Geometry>
 #include <geometry_msgs/TransformStamped.h>
-
+#include <pcl_ros/point_cloud.h>
+#include <pcl/point_types.h>
 
 struct Optimization_Result{
     Eigen::Quaterniond q = Eigen::Quaterniond::Identity();
@@ -22,11 +23,17 @@ struct Optimization_Result{
 
 struct TfPair{
 
+
     std_msgs::Header header_F;
     Eigen::Affine3d transformation_F;
+    pcl::PointCloud<PointType> pcl_F;
+    //::Ptr (new pcl::PointCloud<PointType>);
 
     std_msgs::Header header_S;
     Eigen::Affine3d transformation_S;
+    pcl::PointCloud<PointType> pcl_S;
+    //::Ptr (new pcl::PointCloud<PointType>);
+
 
 };
 

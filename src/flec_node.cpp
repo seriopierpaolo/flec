@@ -4,12 +4,14 @@
 #include <eigen3/Eigen/Geometry>
 #include <ceres/ceres.h>
 
+#include <flec/pcodom.h>
 #include <message_filters/subscriber.h>
 #include <message_filters/synchronizer.h>
 #include <message_filters/sync_policies/approximate_time.h>
 
-#include <flec/odometry_extractor.h>
+#include <flec/pc_odom_manager.h>
 #include <flec/datastructure.h>
+
 
 #include <flec/ceresOptimization.h>
 //#include <flec/observability_module/svdPublisher.h>
@@ -19,7 +21,7 @@ using namespace message_filters;
 
 int main(int argc, char **argv)
 {
-    ros::init(argc, argv, "odometry_extractor_node");
+    ros::init(argc, argv, "flec_node");
 
     ros::NodeHandle nh;
     //ros::Subscriber odometry_sub_Left;
@@ -32,7 +34,7 @@ int main(int argc, char **argv)
     
     TfAccumulator buffer;
     
-    OdometryExtractor odometry_extractor(&buffer);
+    PointCloud_Odometry_Manager pco_manager(&buffer);
     
     //Results_Publisher publisher;
     //svdPublisher svd_publisher(nh);
@@ -41,8 +43,8 @@ int main(int argc, char **argv)
     //PC_PostProcessing post_proc(nh);
 
     // Parameters
-    nh.param<std::string>("odometry_topic/left", odometry_topic_left, "/robot/dlo/odom_left");
-    nh.param<std::string>("odometry_topic/right", odometry_topic_right, "/robot/dlo/odom_right");
+    nh.param<std::string>("odometry_topic/left", odometry_topic_left, "/robot/dlo/pcodom_left");
+    nh.param<std::string>("odometry_topic/right", odometry_topic_right, "/robot/dlo/pcodom_right");
     
     //pc_sub = nh.subscribe("/odom_trajectory_right",10,)
 
@@ -54,13 +56,13 @@ int main(int argc, char **argv)
     //Message_filters used here to couple two reading that have been acquired almost at the same time
 
     // Subscriber
-    message_filters::Subscriber<nav_msgs::Odometry> odom1_sub(nh, odometry_topic_left, 1);
-    message_filters::Subscriber<nav_msgs::Odometry> odom2_sub(nh, odometry_topic_right, 1);
+    message_filters::Subscriber<flec::pcodom> odom1_sub(nh, odometry_topic_left, 1);
+    message_filters::Subscriber<flec::pcodom> odom2_sub(nh, odometry_topic_right, 1);
 
-    typedef sync_policies::ApproximateTime<nav_msgs::Odometry, nav_msgs::Odometry> MySyncPolicy;
+    typedef sync_policies::ApproximateTime<flec::pcodom, flec::pcodom> MySyncPolicy;
       // ApproximateTime takes a queue size as its constructor argument, hence MySyncPolicy(10)
     Synchronizer<MySyncPolicy> sync(MySyncPolicy(10), odom1_sub, odom2_sub);
-    sync.registerCallback(boost::bind(&OdometryExtractor::odometryCallbackUnique, &odometry_extractor, _1, _2));
+    sync.registerCallback(boost::bind(&PointCloud_Odometry_Manager::pair_Callback, &pco_manager, _1, _2));
 
     //pub.publish(odometry_extractor.optResult.t,odometry_extractor.optResult.q);
     //post_proc.result = odometry_extractor.optResult;

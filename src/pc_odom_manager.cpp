@@ -1,18 +1,7 @@
-#include <ros/ros.h>
-#include <std_msgs/Header.h>
-#include <nav_msgs/Odometry.h>
-#include <eigen3/Eigen/Core>
-#include <eigen3/Eigen/Geometry>
-#include <ceres/ceres.h>
-
-#include <flec/odometry_extractor.h>
-#include <flec/datastructure.h>
-
-#include <flec/ceresOptimization.h>
+#include <flec/pc_odom_manager.h>
 
 
-
-    OdometryExtractor::OdometryExtractor(TfAccumulator* buffer)  
+    PointCloud_Odometry_Manager::PointCloud_Odometry_Manager(TfAccumulator* buffer)  
     {
         b = buffer;
         
@@ -22,23 +11,23 @@
     
 
     std::tuple <Eigen::Quaterniond, Eigen::Vector3d>
-    OdometryExtractor::extractTransformation (nav_msgs::OdometryConstPtr msg) 
+    PointCloud_Odometry_Manager::extractTransformation (flec::pcodomConstPtr msg) 
     {
         // Extract rotation and translation components from a nav_msgs::Odometry message
-        Eigen::Quaterniond rotation(msg->pose.pose.orientation.w,
-                                    msg->pose.pose.orientation.x,
-                                    msg->pose.pose.orientation.y,
-                                    msg->pose.pose.orientation.z);
+        Eigen::Quaterniond rotation(msg->Odometry.pose.orientation.w,
+                                    msg->Odometry.pose.orientation.x,
+                                    msg->Odometry.pose.orientation.y,
+                                    msg->Odometry.pose.orientation.z);
 
-        Eigen::Vector3d translation(msg->pose.pose.position.x,
-                                    msg->pose.pose.position.y,
-                                    msg->pose.pose.position.z);
+        Eigen::Vector3d translation(msg->Odometry.pose.position.x,
+                                    msg->Odometry.pose.position.y,
+                                    msg->Odometry.pose.position.z);
 
         return {rotation, translation};
 
     }
 
-        void OdometryExtractor::odometryCallbackUnique(const nav_msgs::OdometryConstPtr &msg1, const nav_msgs::OdometryConstPtr &msg2)
+        void PointCloud_Odometry_Manager::pair_Callback(const flec::pcodomConstPtr &msg1, const flec::pcodomConstPtr &msg2)
     {
         //F = First Lidar - S = Second Lidar
 
