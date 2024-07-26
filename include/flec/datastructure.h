@@ -12,6 +12,9 @@
 #include <pcl_ros/point_cloud.h>
 #include <pcl/point_types.h>
 
+
+typedef pcl::PointXYZ PointType;
+
 struct Optimization_Result{
     Eigen::Quaterniond q = Eigen::Quaterniond::Identity();
     Eigen::Vector3d t = Eigen::Vector3d::Zero();
