@@ -299,7 +299,8 @@ bool ceresOptimization::CostFunction::operator()(const T* const q, const T* cons
       problem->Evaluate(ceres::Problem::EvaluateOptions(), nullptr, nullptr, nullptr, &jacobianCeres);
       Eigen::MatrixXd jC2E = CRSMatrixToEigen(jacobianCeres);
       Eigen::MatrixXd jCP = jC2E.transpose()*jC2E;
-      Eigen::JacobiSVD<Eigen::MatrixXd, Eigen::ComputeThinU | Eigen::ComputeThinV> svd(jCP);
+      Eigen::JacobiSVD<Eigen::MatrixXd> svd(jCP, Eigen::ComputeThinU | Eigen::ComputeThinV);
+      //Eigen::JacobiSVD<Eigen::MatrixXd, Eigen::ComputeThinU | Eigen::ComputeThinV> svd(jCP);
 
        Eigen::VectorXd singularValues = svd.singularValues();
       Eigen::VectorXd newSingularValues = singularValues.head(singularValues.size() - 1);
