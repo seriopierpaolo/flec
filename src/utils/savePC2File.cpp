@@ -9,9 +9,10 @@ using PointCloud = pcl::PointCloud<PointType>;
 void saveData(const TfAccumulator& accumulator, const std::string& filename) {
     std::ofstream outFile(filename, std::ios::binary);
     if (!outFile) {
+        
         throw std::runtime_error("Could not open file for writing.");
     }
-
+    
     // Save the number of TfPairs in the macroBatch
     std::size_t num_pairs = accumulator.macroBatch.currentBatch.size();
     outFile.write(reinterpret_cast<const char*>(&num_pairs), sizeof(num_pairs));
