@@ -3,9 +3,7 @@
 #ifndef DATASTRUCTURE_H
 #define DATASTRUCTURE_H
 
-#include <ros/ros.h>
-#include <nav_msgs/Odometry.h>
-#include <std_msgs/Header.h>
+
 #include <Eigen/Core>
 #include <Eigen/Geometry>
 #include <geometry_msgs/TransformStamped.h>

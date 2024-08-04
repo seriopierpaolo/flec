@@ -65,6 +65,7 @@ add_executable(flec
   src/ceresOptimization.cpp 
   src/observability_module/observation_module.cpp
   src/utils/handlers.cpp
+  src/utils/savePC2File.cpp
   src/batch_manager.cpp
 )
 

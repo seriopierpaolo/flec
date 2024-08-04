@@ -7,6 +7,17 @@
 #include <ceres/ceres.h>
 #include <flec/datastructure.h>
 
+#include <pcl/point_cloud.h>
+#include <pcl/point_types.h>
+
+
+#include <vector>
+#include <string>
+
+// Alias for convenience
+using PointCloud = pcl::PointCloud<pcl::PointXYZ>;
+
+
 static constexpr double EPSILON = 1.0e-4;
 
 /**
@@ -38,4 +49,13 @@ Eigen::MatrixXd CRSMatrixToEigen(const ceres::CRSMatrix& matrix);
 //instantiate a ceresOptimization class with all the relevant information
 void performOptimization(TfBatch* batch);
 
+
+
+
+
+void saveData(const TfAccumulator& accumulator, const std::string& filename);
+
+
+
 #endif // UTILS
+

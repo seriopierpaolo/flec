@@ -89,6 +89,8 @@ void TfAccumulator::updateBuffer(){
 
     performOptimization(&this->macroBatch);
     //std::cout << this->segmentBuffer.size() << std::endl;
+    //saveData(*this,"data.bin");
+
     
 }
 

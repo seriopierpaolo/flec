@@ -25,6 +25,8 @@
 
         return {rotation, translation};
 
+        std::cout << "So qua" << std::endl;
+
     }
 
         void PointCloud_Odometry_Manager::pair_Callback(const flec::pcodomConstPtr &msg1, const flec::pcodomConstPtr &msg2)
