@@ -1,0 +1,8 @@
+In this branch the goal is to provide a monolitich pipeline that captures 
+both the pointcloud and the odometry message and propagate them together.
+However, as I went along, I realised that this is not a good approach for 
+the modularity principle that I would like the code to maintain during maintenance.
+
+INFO:
+- ad hoc msg pcodom implemented for the task
+- ad hoc visual_refinement node for pc match refining

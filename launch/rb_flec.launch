@@ -1,53 +1,74 @@
 
 <launch>
 
+  
+ 
+
   <arg name="robot_namespace" default="robot"/>
   <arg name="rviz" default="true"/>
 
-<!-- =============================================================================== -->
-<!--LEFT ODOMETRY-->
+  <arg name="sensor1_type" default="lidar"/>
+  <arg name="sensor1_topic" default="hesai/left"/>
 
-  <!-- DLO Odometry Node -->
-  <node ns="$(arg robot_namespace)" name="dlo_odom_left" pkg="direct_lidar_odometry" type="dlo_odom_node" clear_params="true">
-
-    <!-- Load parameters -->
-    <rosparam file="$(find direct_lidar_odometry)/cfg/dlo.yaml" command="load"/>
-    <rosparam file="$(find direct_lidar_odometry)/cfg/params.yaml" command="load"/>
-
-    <!-- Subscriptions -->
-    <remap from="~pointcloud" to="/hesai/left"/>
-
-    <!-- Publications -->
-    <remap from="~odom" to="dlo/odom_left"/>
-    <remap from="~pose" to="dlo/pose_left"/>
-    <remap from="~kfs" to="dlo/keyframe_left"/>
-    <remap from="~keyframe" to="dlo/pointcloud/keyframe_left"/>
-    <remap from="~pcodom" to="dlo/pcodom_left"/>
-
-  </node>
-<!-- =============================================================================== -->
+  <arg name="sensor2_type" default="lidar"/>
+  <arg name="sensor2_topic" default="hesai/right"/>
 
 <!-- =============================================================================== -->
-  <!--RIGHT ODOMETRY-->
+<!--FIRST SENSOR ODOMETRY-->
 
-  <!-- DLO Odometry Node -->
-  <node ns="$(arg robot_namespace)" name="dlo_odom_right" pkg="direct_lidar_odometry" type="dlo_odom_node" clear_params="true">
 
-    <!-- Load parameters -->
-    <rosparam file="$(find direct_lidar_odometry)/cfg/dlo.yaml" command="load"/>
-    <rosparam file="$(find direct_lidar_odometry)/cfg/params.yaml" command="load"/>
+  <group if="$(arg sensor1_type)" = "lidar">
 
-    <!-- Subscriptions -->
-    <remap from="~pointcloud" to="/hesai/right"/>
+      <!-- DLO Odometry Node -->
+      <node ns="$(arg robot_namespace)" name="dlo_odom_left" pkg="direct_lidar_odometry" type="dlo_odom_node" clear_params="true">
 
-    <!-- Publications -->
-    <remap from="~odom" to="dlo/odom_right"/>
-    <remap from="~pose" to="dlo/pose_right"/>
-    <remap from="~kfs" to="dlo/keyframe_right"/>
-    <remap from="~keyframe" to="dlo/pointcloud/keyframe_right"/>
-    <remap from="~pcodom" to="dlo/pcodom_right"/>
+    
 
-  </node>
+
+      <!-- Load parameters -->
+      <rosparam file="$(find direct_lidar_odometry)/cfg/dlo.yaml" command="load"/>
+      <rosparam file="$(find direct_lidar_odometry)/cfg/params.yaml" command="load"/>
+
+      <!-- Subscriptions -->
+      <remap from="~pointcloud" to="$(arg sensor1_topic)"/>
+
+      <!-- Publications -->
+      <remap from="~odom" to="dlo/odom_left"/>
+      <remap from="~pose" to="dlo/pose_left"/>
+      <remap from="~kfs" to="dlo/keyframe_left"/>
+      <remap from="~keyframe" to="dlo/pointcloud/keyframe_left"/>
+      <remap from="~pcodom" to="dlo/pcodom_left"/>
+
+      </node>
+
+  </group>
+<!-- =============================================================================== -->
+
+<!-- =============================================================================== -->
+  <!--SECOND SENSOR ODOMETRY-->
+
+
+  <group if="$(arg sensor2_type)" = "lidar">
+      <!-- DLO Odometry Node -->
+      <node ns="$(arg robot_namespace)" name="dlo_odom_right" pkg="direct_lidar_odometry" type="dlo_odom_node" clear_params="true">
+
+        <!-- Load parameters -->
+        <rosparam file="$(find direct_lidar_odometry)/cfg/dlo.yaml" command="load"/>
+        <rosparam file="$(find direct_lidar_odometry)/cfg/params.yaml" command="load"/>
+
+        <!-- Subscriptions -->
+        <remap from="~pointcloud" to="$(arg sensor2_topic)"/>
+
+        <!-- Publications -->
+        <remap from="~odom" to="dlo/odom_right"/>
+        <remap from="~pose" to="dlo/pose_right"/>
+        <remap from="~kfs" to="dlo/keyframe_right"/>
+        <remap from="~keyframe" to="dlo/pointcloud/keyframe_right"/>
+        <remap from="~pcodom" to="dlo/pcodom_right"/>
+
+      </node>
+
+  </group>
 <!-- =============================================================================== -->
 
 

@@ -1,0 +1,11 @@
+flec:
+
+
+  Sensor1:
+    sensor_type: camera
+    topic_name: hesai/left
+
+  Sensor2: 
+    sensor_type: lidar
+    topic_name: hesai/right
+  

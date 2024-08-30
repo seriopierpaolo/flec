@@ -1,15 +1,23 @@
 
 <launch>
 
+  <rosparam file="$(find flec)/cfg/params.yaml" command="load"/>
+
   <arg name="robot_namespace" default="robot"/>
   <arg name="rviz" default="true"/>
+
+  <arg name="sensor1_type" default="lidar"/>
+  <arg name="sensor1_topic" default="hesai/left"/>
+
+  <arg name="sensor2_type" default="lidar"/>
+  <arg name="sensor2_topic" default="hesai/right"/>
 
 <!-- =============================================================================== -->
 <!--ACKERMANN UNICYCLE-->
 
   <node name="unicycle" pkg="ackermann_unicycle" type="unicycle" clear_params="true"> 
-  <remap from="unicycle/odom_1" to="/robot/dlo/odom_left"/>
-  <remap from="unicycle/odom_2" to="/robot/dlo/odom_right"/>
+  <remap from="unicycle/odom_1" to="$(arg sensor1_topic)"/>
+  <remap from="unicycle/odom_2" to="$(arg sensor2_topic)"/>
   </node>
       
 <!-- =============================================================================== -->
@@ -20,7 +28,7 @@
 
   <node name="odometry_pc_left" pkg="trajectory_match" type="odometry_pc" clear_params="true">
 
-    <remap from="/dlo/odom" to="/robot/dlo/odom_left"/>
+    <remap from="/dlo/odom" to="$(arg sensor1_topic)"/>
     <remap from="/odom_trajectory" to="/odom_trajectory_left"/>
 
   </node>
@@ -32,7 +40,7 @@
 
   <node name="odometry_pc_right" pkg="trajectory_match" type="odometry_pc" clear_params="true">
 
-    <remap from="/dlo/odom" to="/robot/dlo/odom_right"/>
+    <remap from="/dlo/odom" to="$(arg sensor2_topic)"/>
     <remap from="/odom_trajectory" to="/odom_trajectory_right"/>
 
   </node>
