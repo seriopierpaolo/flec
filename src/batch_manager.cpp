@@ -2,14 +2,16 @@
 #include <flec/utils.h>
 #include <flec/ceresOptimization.h>
 
+#include <geometry_msgs/Pose.h>
 
-    void performOptimization(TfBatch* batch) {
+
+    Optimization_Result performOptimization(TfBatch* batch) {
 
         bool useCallbackFlag = 1;
         ceresOptimization solver(*batch, useCallbackFlag);
 
         Optimization_Result optResult = solver.solve();
-
+        return optResult;
 
     }
 
@@ -33,6 +35,36 @@
         return false;
         
     }
+
+
+
+TfAccumulator::TfAccumulator(ros::NodeHandle nh)
+{
+    this->transformPublisher = nh.advertise<geometry_msgs::Pose>("coarse_estimation",1); 
+
+};
+
+
+
+void TfAccumulator::publishTransform(Optimization_Result oR)
+{
+    geometry_msgs::Pose msg;
+
+    // Set the position
+    msg.position.x = oR.t.x();
+    msg.position.y = oR.t.y();
+    msg.position.z = oR.t.z();
+
+    // Set the orientation (as a quaternion)
+    msg.orientation.x = oR.q.x();
+    msg.orientation.y = oR.q.y();
+    msg.orientation.z = oR.q.z();
+    msg.orientation.w = oR.q.w();
+
+    // Publish the message
+    this->transformPublisher.publish(msg);
+}
+
 
 void TfAccumulator::updateBatch() 
 {
@@ -78,6 +110,9 @@ void TfAccumulator::updateBatch()
 
 }
 
+
+
+
 void TfAccumulator::updateBuffer(){
     
     for (int i = 0; i < this->batch.currentBatch.size(); i++){
@@ -87,7 +122,9 @@ void TfAccumulator::updateBuffer(){
     this->segmentBuffer.push_back(this->batch);
     this->batch = TfBatch();
 
-    performOptimization(&this->macroBatch);
+    Optimization_Result result = performOptimization(&this->macroBatch);
+
+    publishTransform(result);
     //std::cout << this->segmentBuffer.size() << std::endl;
     
 }

@@ -52,18 +52,27 @@ public:
 
 class TfAccumulator {
     private:
-    
-    
+        ros::NodeHandle nh_;
+        
+        
 
-public:
-    TfPair pair;
-    TfBatch batch;
-    std::vector<TfBatch> segmentBuffer;
-    TfBatch macroBatch;
-    
-    void updateBatch();
+    public:
 
-    void updateBuffer();
+        TfAccumulator(ros::NodeHandle nh);
+
+        ros::Publisher transformPublisher;
+        TfPair pair;
+        TfBatch batch;
+        std::vector<TfBatch> segmentBuffer;
+        TfBatch macroBatch;
+
+        void updateBatch();
+
+        void updateBuffer();
+
+        void publishTransform(Optimization_Result oR);
+
+    
 };
 
 

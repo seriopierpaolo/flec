@@ -30,7 +30,7 @@ int main(int argc, char **argv)
     std::string odometry_topic_left;
     std::string odometry_topic_right;
     
-    TfAccumulator buffer;
+    TfAccumulator buffer(nh);
     
     OdometryExtractor odometry_extractor(&buffer);
     

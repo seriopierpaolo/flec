@@ -36,6 +36,6 @@ Eigen::Matrix<double, 3, 3> skewSymmetric(const Eigen::Matrix<double, 3, 1>& inp
 Eigen::MatrixXd CRSMatrixToEigen(const ceres::CRSMatrix& matrix);
 
 //instantiate a ceresOptimization class with all the relevant information
-void performOptimization(TfBatch* batch);
+Optimization_Result performOptimization(TfBatch* batch);
 
 #endif // UTILS
