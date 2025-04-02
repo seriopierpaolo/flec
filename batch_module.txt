@@ -1,0 +1,6 @@
+Here, batch handling keeps its modularity 
+with respect to the visual refinement part
+
+Visual refinement could be structured as two map 
+that at each iteraction get filtered with the 
+batch information
