@@ -5,3 +5,6 @@ FLEC is an extrinsic calibration module written in C++ and ROS1 that doesn't req
 
 
 [Paper](https://ieeexplore.ieee.org/abstract/document/11376004)
+
+
+![scheme](media/scheme.png "Architecture")
